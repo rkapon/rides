@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Rides and Hikes</title>
+    <link href="https://google-developers.appspot.com/maps/documentation/javascript/examples/default.css" rel="stylesheet">
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+    <script>
+		var map;
+		var rides;
+		var ridesbyyear;
+		var hikes;
+		var hikesall;
+		var marker;
+		var count = 0;
+		var opacity = 1.0;
+		var chartdiv;
+		var  yearlayer = new Array();
+		var imageBounds = new google.maps.LatLngBounds(
+			  new google.maps.LatLng(29.50856990328634, 31.98952573813994),
+			  new google.maps.LatLng(34.51937864774265, 37.66048568588892));
+		var watchid = null;
+		function initialize() {
+        var myLatlng = new google.maps.LatLng(32,34);
+        var mapOptions = {
+//          zoom: 8,
+//          center: myLatlng,
+//          mapTypeId: google.maps.MapTypeId.ROADMAP
+			mapTypeId: google.maps.MapTypeId.TERRAIN,
+			mapTypeControlOptions: {
+				position: google.maps.ControlPosition.TOP_RIGHT,
+				rotateControl: true
+			}
+        }
+
+		var ccount = 19;
+		
+        map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+	  	chartdiv = document.getElementById( 'chart');
+
+        rides = new google.maps.KmlLayer('http://da-li.co.il/static/ge/newall.kmz?date=' + ccount);
+        rides.setMap(map);
+        hikes = new google.maps.KmlLayer('http://da-li.co.il/static/ge/ShvilAll.kmz?date=' + ccount);
+        hikesall = new google.maps.KmlLayer('http://da-li.co.il/static/ge/All-Hiking.kmz?date=' + ccount);
+//		ridesbyyear = new google.maps.KmlLayer('http://da-li.co.il/static/ge/newallbyyear.kmz?date=' + ccount);
+		google.maps.event.addListener(rides, 'click', function(event) {
+          var content = event.featureData.infoWindowHtml;
+			update(content);
+			});
+
+		for (i = 2012;i<=2017;i++)
+		{
+			yearlayer['l'+i] = new google.maps.KmlLayer('http://da-li.co.il/static/ge/all-' + i + '.kmz?date=' + ccount);
+		}
+		marker = new google.maps.Marker({});
+//		weather = new google.maps.GroundOverlay('http://www.ims.gov.il/Ims/Pages/RadarImage.aspx?Row=9&TotalImages=10&LangID=1&Location=&noca=' + count,      imageBounds);
+		weather = new google.maps.GroundOverlay('http://meteo-logic.gmapsradar.s3.amazonaws.com/overlays/out0.png?rnd=' + count,      imageBounds);
+
+		weather.setOpacity(opacity);
+
+      }
+	  function ToggleOverlay(ol,state)
+	  {
+		if (state)
+		{
+			ol.setMap(map);
+		}
+		else
+		{
+			ol.setMap(null);
+		}
+	  }
+	  function ToggleYear(year,state)
+	  {
+		if (state)
+		{
+			yearlayer['l'+year].setMap(map)
+		}
+		else
+		{
+			yearlayer['l'+year].setMap(null)
+		}
+	  }
+	  function trackLocation(state)
+	  {
+		if (state)
+		{
+			if (watchid == null)
+			{
+				var options = {  enableHighAccuracy: true };
+				watchid = navigator.geolocation.watchPosition(SetPositon,error,options);
+			}
+			marker.setMap(map);
+		}
+		else
+		{
+			marker.setMap(null);			
+		}
+	  }
+	  function error(err)
+	{
+	}
+	function SetPositon(pos)
+	{
+		lat = pos.coords.latitude;
+		lon = pos.coords.longitude;
+		marker.setPosition( new google.maps.LatLng( lat, lon ) );
+	}
+	
+var timerId;
+function update(t)
+{
+//	alert(t);
+	var m = t.match(/0em">[\w-_ ]+/);
+	var name = m[0].substr(5,100);
+//	alert(name);
+//	return;
+//	var a = JSON.parse(t);
+//	chart.draw(google.visualization.arrayToDataTable(a), options);
+	chartdiv.innerHTML = '<iframe src="profile/' + name +'.htm" style="overflow:none;width:100%;height:100%;border:none;">';
+	chartdiv.style.visibility = 'visible';
+	if (timerId == null)
+	{
+	}
+	else
+	{
+		clearTimeout(timerId);
+	}
+	timerId = setTimeout(function(){ chartdiv.style.visibility = 'hidden'; }, 60000);
+}
+	  </script>
+  </head>
+  <body onload="initialize()">
+    <div id="map-canvas" style='border-radius: 25px;'></div>
+	<div id='chart' style='position:absolute;top:100px;background-color:white;left:40px;z-index:1000;width:700px;height:300px;box-shadow: 10px 10px 5px rgba(240,80,50,0.45);visibility:hidden;'></div>
+	<div style='font-size:20px;font-family:Arial;position:absolute;top:5px;left:10px;background-color:rgba(255,255,255,0.5);border-radius:5px;'>
+	<input type='checkbox' checked onchange='ToggleOverlay(rides,this.checked)'> Rides<br>
+	<input type='checkbox' onchange='ToggleYear(2017,this.checked)'> 17
+	<input type='checkbox' onchange='ToggleYear(2016,this.checked)'> 16<br>
+	<input type='checkbox' onchange='ToggleYear(2015,this.checked)'> 15
+	<input type='checkbox' onchange='ToggleYear(2014,this.checked)'> 14<br>
+	<input type='checkbox' onchange='ToggleYear(2013,this.checked)'> 13
+	<input type='checkbox' onchange='ToggleYear(2012,this.checked)'> older<br>
+	<input type='checkbox' onchange='ToggleOverlay(hikes,this.checked)'> Shvil<br>
+	<input type='checkbox' onchange='ToggleOverlay(hikesall,this.checked)'> Hikes<br>
+	<input type='checkbox' onchange='trackLocation(this.checked)'> My Location<br>
+	<input type='checkbox' onchange='ToggleOverlay(weather,this.checked)'> Weather<br>
+	<a href='newall.kmz'>Download KMZ</a>
+	</div>
+  </body>
+</html>
+

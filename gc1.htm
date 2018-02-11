@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Flight Time</title>
+	<meta name="description" content="Flight Time" />
+	<meta property="og:title" content="Flight Time" />
+	<meta property="og:site_name" content="Da-Li"/>
+	<meta property="og:description" content="Direct flight Time" />
+	<meta property="og:image" content="http://www.da-li.co.il/static/ge/images/flight.jpg" />
+   <link href="https://google-developers.appspot.com/maps/documentation/javascript/examples/default.css" rel="stylesheet">
+ 	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCJx0e4TWAUKpOHtP4-qgV5MMOmhoOmMOY"></script>
+	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+	<script type="text/javascript" src="v3_ll_grat.js"></script>
+	<style>
+input::placeholder { color:lightgray;}
+</style>
+<script>
+		var grid;
+		var chart;
+		var map;
+		var geocoder = new google.maps.Geocoder();
+//		document.keypress(function(e){ if(e.keyCode == 13) { calcDistBtween();}});
+		var reverse=0;
+		var options = {
+			lineWidth: 1
+			,hAxis: { title: "Lat2", gridlines: { count: 19 }}
+			,vAxis: { title: "Flight hours",viewWindow:{
+                max:24,
+                min:0
+              }, gridlines: { count: 11 }}
+			,crosshair: { trigger: 'both' }   // Display crosshairs.
+			,legend: {position: 'none'}
+			,explorer: { 
+			actions: ['dragToZoom', 'rightClickToReset'],
+			axis: 'horizontal',
+			keepInBounds: true,
+			maxZoomIn: 4.0		//	,backgroundColor: '#EEE'
+			}
+			};
+		function CreateChart()
+		{
+			chart = new google.visualization.LineChart(document.getElementById('output'));
+		}
+		google.charts.load('current', {'packages':['corechart'],'callback': CreateChart});
+
+function dist(lat1,lon1,lat2,lon2)
+{
+//
+//	=2*ASIN(SQRT(SIN((O14-$I$14)/2)^2+COS($I$14)*COS(O14)*SIN($P$14/2)^2))/2/PI()
+// 
+	rlat1 = 2*Math.PI*lat1/360;
+	rlat2 = 2*Math.PI*lat2/360;
+	rlon1 = 2*Math.PI*lon1/360;
+	rlon2 = 2*Math.PI*lon2/360;
+	dgama = rlon2 - rlon1;
+	return 2*Math.asin(Math.sqrt(Math.pow(Math.sin((rlat2-rlat1)/2),2)+Math.cos(rlat1)*Math.cos(rlat2)*Math.pow(Math.sin(dgama/2),2)));
+}
+
+
+
+function waypoint(f,lat1,lon1,lat2,lon2,reverse)
+{
+
+	var φ1 = lat1 / 180 * Math.PI;
+	var φ2 = lat2 / 180 * Math.PI;
+	var λ1 = lon1 / 180 * Math.PI;
+	var λ2 = lon2 / 180 * Math.PI;
+	if (reverse)
+		var λ = (180 - Math.abs(lon2-lon1)) / 180 * Math.PI;
+	else
+		var λ = (lon2-lon1) / 180 * Math.PI;
+	
+	var a = Math.sin((1-f) * λ) / Math.sin(λ); 
+	var b = Math.sin(f*λ) / Math.sin(λ);
+	var x = a * Math.cos(φ1) * Math.cos(λ1) + b * Math.cos(φ2) * Math.cos(λ2);
+	var y = a * Math.cos(φ1) * Math.sin(λ1) + b * Math.cos(φ2) * Math.sin(λ2);
+	var z = a * Math.sin(φ1) + b * Math.sin(φ2);
+	var fi = Math.atan2(z, Math.sqrt(x*x + y*y));
+	var gi = Math.atan2(y, x);
+//	return "" + f + "," + (180 * fi / Math.PI) + "," + (180 *  gi / Math.PI) + "<br>";
+	return { lat: (180 * fi / Math.PI), lng: (180 *  gi / Math.PI) };
+}
+
+var flightPlanCoordinates;
+
+
+function calcPlanCoordinates(lat1,lon1,lat2,lon2)
+{
+	flightPlanCoordinates = new Array();
+	var points = 100;
+	var d = 1.0/points;
+	reverse = Math.abs(lon2-lon1) > 180 ? 1 : 0;
+//	console.log("lon1=" + lon1 + " lon2=" + lon2 + "diff=" + (lon2-lon1) + " delta=" + delta);
+	for (i=0;i<=points;i++)
+	{
+		flightPlanCoordinates[flightPlanCoordinates.length] = waypoint(d*i,lat1,lon1,lat2,lon2,reverse);
+	}
+}
+
+
+function calc()
+{
+	var res = new Array();
+	var html = ""
+	var lat1 = 1* document.getElementById("lat1").value;
+	var lon1 = 1* document.getElementById("lon1").value;
+	var lon2 = 1* document.getElementById("lon2").value;
+	res[0] = new Array('lat2','distance');
+	for (i=-90;i<90;i++)
+	{
+		res[i+90+1] = new Array(i,40000*dist(lat1,lon1,i,lon2)/2/Math.PI/850);
+//		html += (i + "," + res[i+90] + "<br>");
+	}
+	chart.draw(google.visualization.arrayToDataTable(res), options);
+//	document.getElementById("output").innerHTML = html;
+}
+
+var l1;
+var l2;
+var add1;
+var add2;
+var markers = new Array();
+var flightPath = null;
+function setRes(results, status)
+{
+	if ((l1 == null) && (status == 'OK'))
+	{
+		l1 = results[0].geometry.location;
+		geocoder.geocode({'address': add2}, setRes);
+	}
+	else
+	{
+		if (status == 'OK')
+		{
+			l2 = results[0].geometry.location;
+			var d = dist(l1.lat(),l1.lng(),l2.lat(),l2.lng());
+			var km = 40000*d/2/Math.PI;
+			var t = km/850.0;
+			mm =  Math.round(60*(t-Math.floor(t)));
+			if (mm<10)
+			{
+				mm = "0" + mm;
+			}
+			var ts = Math.floor(t) + ":" + mm;
+			document.getElementById("output").innerHTML = "<table style='width:100%;border-collapse: collapse;border: 1px solid black;'><tr style='border: 1px solid black;'><td style='border: 1px solid black;'>From</td><td style='border: 1px solid black;'>" + add1 + "</td><td style='border: 1px solid black;'>" + l1.lat().toFixed(2) + "</td><td style='border: 1px solid black;'>" + l1.lng().toFixed(2) + "</td></tr><tr style='border: 1px solid black;'><td style='border: 1px solid black;'>To</td><td style='border: 1px solid black;'>" + add2 +  "</td><td style='border: 1px solid black;'>" + l2.lat().toFixed(2) + "</td><td style='border: 1px solid black;'>" + l2.lng().toFixed(2) + "</td></tr><tr style='border: 1px solid black;'><td style='border: 1px solid black;'>Time (h:mm)</td><td style='border: 1px solid black;'>" + ts + "</td><td>Distance (Km)</td><td style='border: 1px solid black;'>" + Math.round(km) + "</td</tr></table><center><input type=button value='&#x1F50D;'  style='font-size: 1em;' onclick=newseatch()>";
+			markers[0].setPosition(l1);
+			markers[1].setPosition(l2);
+			markers[0].setMap(map);
+			markers[1].setMap(map);
+//			document.getElementById("map").style.visibility = 'visible';
+			calcPlanCoordinates(l1.lat(),l1.lng(),l2.lat(),l2.lng());
+			if (reverse)
+			{
+				var east = (l1.lng() < l2.lng()) ? l1.lng() : l2.lng();
+				var west = (l1.lng() > l2.lng()) ? l1.lng() : l2.lng();
+			}
+			else
+			{
+				var east = (l1.lng() > l2.lng()) ? l1.lng() : l2.lng();
+				var west = (l1.lng() < l2.lng()) ? l1.lng() : l2.lng();
+			}
+			var north = (l1.lat() > l2.lat()) ? l1.lat() : l2.lat();
+			var south = (l1.lat() < l2.lat()) ? l1.lat() : l2.lat();
+			var sw = new google.maps.LatLng( south, west );
+			var ne = new google.maps.LatLng( north, east );
+			var latlngbounds = new google.maps.LatLngBounds(sw,ne);
+			map.setCenter(latlngbounds.getCenter());
+			map.fitBounds(latlngbounds); 
+			if (flightPath != null)
+			{
+				flightPath.setMap(null);
+			}
+	        flightPath = new google.maps.Polyline({
+          path: flightPlanCoordinates,
+          geodesic: true,
+          strokeColor: '#FF0000',
+          strokeOpacity: 1.0,
+          strokeWeight: 2
+        });
+
+        flightPath.setMap(map);		
+		document.getElementById('output').style.visibility = 'visible';
+		document.getElementById('input').style.visibility = 'hidden';
+
+		}
+		else
+		{
+			document.getElementById("output").innerHTML = "Please check From/To<input type=button value='&#x1F50D;'  style='font-size: 1em;' onclick=newseatch()>";
+		}
+	}
+}
+
+function calcDistBtween() 
+{
+        add1 = document.getElementById('city1').value;
+        add2 = document.getElementById('city2').value;
+		l1 = null;
+		l2 = null;
+        geocoder.geocode({'address': add1}, setRes);
+} 		  
+
+function initialize()
+{
+        var mapOptions = {
+			zoom: 3,
+//          center: myLatlng,
+//          mapTypeId: google.maps.MapTypeId.ROADMAP
+			mapTypeId: google.maps.MapTypeId.TERRAIN,
+			center:new google.maps.LatLng(40,0),
+			mapTypeControl: true,
+			mapTypeControlOptions: {
+				style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+				position: google.maps.ControlPosition.BOTTOM_LEFT
+			},
+	};
+
+	map = new google.maps.Map(document.getElementById('map'), mapOptions);
+	markers[0] = new google.maps.Marker();
+	markers[1] = new google.maps.Marker();
+	grid = new Graticule(map, true);
+	
+}
+
+function newseatch()
+{
+	document.getElementById('input').style.visibility = 'visible';
+	document.getElementById('output').style.visibility = 'hidden';	
+}
+</script>
+<body onload="initialize()" style='height:100%'>
+<center>
+<div id="map" style='width:100%;height:1000px;border-radius: 10px;'></div>
+<div id='input' style='font-size:20px;font-family:Arial;position:absolute;top:0px;left:0px;background-color:rgba(255,255,255,0.5);border-radius:5px;width:100%;'>
+<!--
+lat1 <input id=lat1 type=text value=0>
+lon1 <input id=lon1 type=text value=0>
+lon2 <input id=lon2 type=text value=0>
+<input type=button onclick='calc();' value='go'>
+
+<br>
+-->
+<table style='width:100%;'>
+	<tr>
+		<td'><center><input type='text' id='city1' style='width:90%;font-size: 1em;' placeholder='From city, country, airport or coordinates'></td>
+	</tr>
+	<tr>
+		<td><center><input type='text' id='city2' style='width:90%;font-size: 1em;' placeholder='To city, country, airport or coordinates'></td>
+	</tr>
+</table>
+<center><input type='button' style='font-size: 1em;' onclick='calcDistBtween()' value='&#x1F50D;'>
+
+</div>
+<div id='output' style='font-size:20px;font-family:Arial;position:absolute;top:0px;left:10%;width:80%;background-color:rgba(255,255,255,0.5);border-radius:5px;visibility:hidden;'>
+</div>
+</center>
+</body>

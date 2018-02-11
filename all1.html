@@ -1,0 +1,286 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!--
+ Copyright 2008 Google Inc. 
+ Licensed under the Apache License, Version 2.0: 
+ http://www.apache.org/licenses/LICENSE-2.0 
+ -->
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <title>Google Maps API Example: Simple Geocoding</title>
+    <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=ABQIAAAAjU0EJWnWPMv7oQ-jjS7dYxSPW5CJgpdgO_s4yyMovOaVh_KvvhSfpvagV18eOyDWu7VytS6Bi1CWxw"
+      type="text/javascript"></script>
+<script>
+
+//var address = new Array('12 Yehoshu\'a Bin Nun St. Revava','3/49 Ben-Hur St. Petah-Tikva','13/7 Sderot HaYotzer Tel-Aviv','24 Hahashmonaim St. Tel-Aviv','28 Laskov St. Holon','2416 Ranch Rd. Sachse, Texas.','59 Rimon St. Moshav Ginaton','5A. De-Haas St. Tel-Aviv','13/30 Derech-HaYam St. Ganey Tikva','81 Ein-Ganim St. Apartment. 2 Petah-Tikva.','Hanesher 5 Netanya','1 Levi-Eshkol St. apartment 28 Netanya','6 Tel-Hai St. Holon','55 Migdalor St. Rishon-LeZion','8B/17 Epstein St. Tel-Aviv','HaHistadrot 35/4 st. Givatayim','29 Hareshet St. Bat-Yam.','229/7 Dizengoff St. Tel-Aviv','33 Bentley Lane','Port Deposit,Maryland','21904 United State','20/2 Ostrovsky St. Raanana','5/12 Nativ Hamazlot St. Jerusalem','13 Meir Arial St. Ramle','2 Bosel St. (Entrance D; Apartment 16) Kfar-Saba.','20/1 Shapira St., Petach-Tikva','7/6 Kapach St, Holon','7 Metsudat Beitar St. Tel-Aviv','2/21 Menora St. Tel-Aviv','4/7 Rupin St. Rishon LeTzion','Simtat Hyod Chet 1 Hod Hsharon','9/3 Rashi St. Hod Hasharon','21/1 Ha'Odem St. Hod Hasharon','16 Hisin St. Tel Aviv','Gadna 11 Tel-Aviv','5/49 Vangruver St. Petach Tikva','2 Yesod Hamaale St. Petach Tikva','11 Hamaavak St. Givataym','Ha-Shikma 11 St. Tel-Mond','9 Hachof St. Shoshanat Haamakim','12/8 Itzhak Sade St. Azor','33/1 Kdoshei Kahir St. Holon','16/5 Brener St. Tel-Aviv','76/42 Pinkas St. Tel-Aviv','11/15 Yigal Yadin St. Holon','22 Saadya Gaon St. Holon','38/6 Vinik St. Rishon LeTzion','23/26 Ben-Tzvi St. Givataym','27/9 Hailanot Herzliya','13/3 Hagefen St. Tzur-Moshe','140 Hagolan St. Tel-Aviv','8 Sadot St. Nes-Tziona','42/7 Hanesiim St. Raanana','45 Em Hakvutsot St. Hod Hasharon','29 Tsahal St. Yahud','72 Tzfat St. Petach-Tikva','4/12 Maymon St. Rishon Lezion','52 Hagalil St. Ganey Tikva','10 Simcha St. Ramat Gan','6A Korazim St. Tel Aviv','4 Adas St. Hertzlia','1 Uzi Narkis St. Holon','12/5 Hibat-Tzion St., Ramat Gan','12 Abarbanel St. Rishon Letzion','4/17 HaMatzbiim St. Lod',' Derech Yerushalayim 12, Rehovot.','31 Dobnov St. Rishon- letzion','8 Mahrozet St. Tel-Aviv','3 Shoshana Doar St. Jaffa','3 Hilel St. Ashkelon','39/25 Pinchas Hameiri St. Petach Tikva','70/15 Tzfat St., Petach Tikva','24/7 Kaplinsky st. Rishon-Le-Zion','50/10 Hapodim St. Ramat Gan','35 Yaffo Road Tel-Aviv','13/11 Hadera St Petach Tikva','39 HaHistadrut St Givataim','32/8 Haneviim St. Modiin','6 HaGeffen St Ornit','5 Hakishon St. RIshon Lezion',' 11A/7 Hanna Rovina St; Tel-Aviv.','7/43 Ehud Manor St. Beer Yaakov','Maale Anesher 3/1 Ramat Gan','Mendely mocher asfarim 3/1 Tel Aviv','4 Hachashmonaim St., Ramat Gan','5/13 Gedera St. Petach - Tikva','Shmaryau Levin 21/16. Rishon Lezion','3/2 Ha'Irus St. Tel Aviv','12/3 Tzvi Shapira st. Holon','28/13 Hadar St. Ramat Gan','18 Hatuval St Ramat Gan','elol 5/5 ashdod Ashdod','4 Igal Alon St Hertzlia','Yom Ahkipurim 11/8 Hulon','apisga 4/1 Arie','22 Harav Yosef Haim St Or-Yahuda','Hana Senesh 4 Tel Aviv','5 Hashita St Kfar Netter','4/9 Hakneset St Hertzlia','7 Rabi Meir St Tel Aviv','6/8 Avner Ben Ner St. Nes-Tziona','Ana frank 5 ','Bat Yam Bat Yam','Amorag 12 St Binyamina','88/38 Hazeitim st Givat Shmuel','Tsirlson 9 St. Tel-Aviv','HaEmaot 7 St Nes-Tsiona','Shimon Ben Tzvi 14 Givatayim','Ehud Manor 7/8 St; Be'er-Yaakov.','22/56 HA'alonim St. Natanya','kibuts neser sirani ','Hahalutzim 8 Bat Yam','Mosinzon 1/6 Tel Aviv','Hakfar 11/5','kiryat Ono kiryat Ono','Hatehena 13 Kiryat-Uno','Aharon Beker 9 Tel Aviv','Haoren str/13','Etz Efrayim ','Mezada 4 Bat-Yam','Sapir 16/1 Gedera','Emek Ahula St. 6/4 Kfar Saba','Hayarden st 53/2 Ramat Gan','22 Arie Braun St.','Apt. 35 Petach Tikva','Yad Mordehay 8 Jerusalem','Hatamar 3/6 Kiryat Ono','Mendelbelt 9/8 Herzelya','Barkan 51 st. Rosh Haayin','96/43 Hayarden st. Ramat Gan','7 Havazelet st Ramat Gan','Golda Meir 8/42 Hod Hasharon','Tabenkin Bat Yam','Ben-Zvi 24 Givataim','tzayitlin 13/8 Tel- Aviv','Eliezer 2/17 Reshon Le Zion',' Shavei Shomron','Borochov 13 Givatayim','4 Har Sinai St. Raanana','5 Meir Shfiya Street Petach Tikva','Mifraz Shlomo 70/40 Holon','8 Saifan St. Ein Vered','Avital 83. Reut','Herzel 59/7 Ramat Gan','Aeyilon 73 Rosh Aayin','Almagor 15/6 Tel Aviv','Zeiger St. 3 Rishon Lezion Rishon Le Zion','Menahem 19/4 Bnay Brak','Moshav Beit Arif',','Meshek 48 B Shoham','Kitsiz 8 Tel Aviv','8 Max Shine St. Rehovot','3/15 Asirey Tzion St. Petach Tikva','7 Hagolan St. Tel Aviv','Ani Maamin 1 Tel-Aviv','Sheshet Yamim 2/2 Ariel','Hel HaAvir 3/56 Rishon Le Zion','Kakal 22?' Givataim','Mesinei Negba 3/3 Herzelia','Simch 3 Ramat gan','Barzilai Israel 10/6 Hulon','20 Hoshen St. Shimshit','Malchey Israel 36 Rishon Leztion','haistadrut 23/13 Hulon','Mayzner 1 Petach - Tikva','Marzuk 6/8 Hertzliya','Israel Guri 24 Tel Aviv','Levi Eshkol 13/26 Natanyia','3 Pragim St. Herzliya','Tel-Hai 100 apartment 5 Kfar Saba','9 Hirshfeld st. Rishon Le Tziyon','42, Kehilat Warsaw St. Tel Aviv','33 hailtit Rishon Le-Zion','Moshav Bneya 321 Moshav Benya 321','7 Zeelon st.','Neve Savyon Or Yeuda','Dolev 42 Gedera',' ','2 Sapir st. Kdumim','21 Harav-Maimon St. Apartment 21 Bat-Yam.','Yigal Yadin 9 Holon','20 Hana Senesh st.',' 46446 Herzelia','15A Ha\'oranim st Ganey-Tikva','26 Rabin st. Kiryat Ono','5/59 Wangruber St. Petach Tikva','Kdoshey Hashoa 2 Ganey-Tikva','D.N. Shimshon , 99803','Kibbutz Tzora Kibbutz Tzora','3/16 Remez st. Ramat Hasharon','Ehad Haam 98. Tel Aviv','14 Shimhon Ben Zvi st.','. Givhataim','28 VOLFSON Rishon Le Tziyon','Emanuel Zamir st.','Appartment No. 4/9 Petah Tikva','6/20 San Martin St. Lod','10/34 Shaul Hamelech St, Kiryat Ono',' 3 Yehuda Hanase., Ramat- Gan',' 10 Geula St; Kfar-Saba','19/9 Dov-Hoz St., Kfar-Saba','137/11 Ben Yehuda St. Tel Aviv',' 10 Haneviim St. Rosh-HaAyin','6/5 Ussishkin St. Herzliya',' Kibutz Nitzanim');
+var address = new Array('12 Yehoshu\'a Bin Nun St. Revava',
+'3/49 Ben-Hur St. Petah-Tikva',
+'13/7 Sderot HaYotzer Tel-Aviv',
+'24 Hahashmonaim St. Tel-Aviv',
+'28 Laskov St. Holon',
+'59 Rimon St. Moshav Ginaton',
+'5A. De-Haas St. Tel-Aviv',
+'13/30 Derech-HaYam St. Ganey Tikva',
+'81 Ein-Ganim St. Apartment. 2 Petah-Tikva.',
+'Hanesher 5 Netanya',
+'1 Levi-Eshkol St. apartment 28 Netanya',
+'6 Tel-Hai St. Holon',
+'55 Migdalor St. Rishon-LeZion',
+'8B/17 Epstein St. Tel-Aviv',
+'HaHistadrot 35/4 st. Givatayim',
+'29 Hareshet St. Bat-Yam.',
+'229/7 Dizengoff St. Tel-Aviv',
+'33 Bentley Lane',
+'21904 United State',
+'20/2 Ostrovsky St. Raanana',
+'5/12 Nativ Hamazlot St. Jerusalem',
+'13 Meir Arial St. Ramle',
+'2 Bosel St. (Entrance D; Apartment 16) Kfar-Saba.',
+'20/1 Shapira St. etach-Tikva',
+'7/6 Kapach St, Holon',
+'7 Metsudat Beitar St. Tel-Aviv',
+'2/21 Menora St. Tel-Aviv',
+'4/7 Rupin St. Rishon LeTzion',
+'Simtat Hyod Chet 1 Hod Hsharon',
+'9/3 Rashi St. Hod Hasharon',
+'21/1 Ha\'Odem St. Hod Hasharon',
+'16 Hisin St. Tel Aviv',
+'Gadna 11 Tel-Aviv',
+'5/49 Vangruver St. Petach Tikva',
+'2 Yesod Hamaale St. Petach Tikva',
+'11 Hamaavak St. Givataym',
+'Ha-Shikma 11 St. Tel-Mond',
+'9 Hachof St. Shoshanat Haamakim',
+'12/8 Itzhak Sade St. Azor',
+'33/1 Kdoshei Kahir St. Holon',
+'16/5 Brener St. Tel-Aviv',
+'76/42 Pinkas St. Tel-Aviv',
+'11/15 Yigal Yadin St. Holon',
+'22 Saadya Gaon St. Holon',
+'38/6 Vinik St. Rishon LeTzion',
+'23/26 Ben-Tzvi St. Givataym',
+'27/9 Hailanot Herzliya',
+'13/3 Hagefen St. Tzur-Moshe',
+'140 Hagolan St. Tel-Aviv',
+'8 Sadot St. Nes-Tziona',
+'42/7 Hanesiim St. Raanana',
+'45 Em Hakvutsot St. Hod Hasharon',
+'29 Tsahal St. Yahud',
+'72 Tzfat St. Petach-Tikva',
+'4/12 Maymon St. Rishon Lezion',
+'52 Hagalil St. Ganey Tikva',
+'10 Simcha St. Ramat Gan',
+'6A Korazim St. Tel Aviv',
+'4 Adas St. Hertzlia',
+'1 Uzi Narkis St. Holon',
+'12/5 Hibat-Tzion St., Ramat Gan',
+'12 Abarbanel St. Rishon Letzion',
+'4/17 HaMatzbiim St. Lod',
+' Derech Yerushalayim 12, Rehovot.',
+'31 Dobnov St. Rishon- letzion',
+'8 Mahrozet St. Tel-Aviv',
+'3 Shoshana Doar St. Jaffa',
+'3 Hilel St. Ashkelon',
+'39/25 Pinchas Hameiri St. Petach Tikva',
+'70/15 Tzfat St., Petach Tikva',
+'24/7 Kaplinsky st. Rishon-Le-Zion',
+'50/10 Hapodim St. Ramat Gan',
+'35 Yaffo Road Tel-Aviv',
+'13/11 Hadera St Petach Tikva',
+'39 HaHistadrut St Givataim',
+'32/8 Haneviim St. Modiin',
+'6 HaGeffen St Ornit',
+'5 Hakishon St. RIshon Lezion',
+' 11A/7 Hanna Rovina St; Tel-Aviv.',
+'7/43 Ehud Manor St. Beer Yaakov',
+'Maale Anesher 3/1 Ramat Gan',
+'Mendely mocher asfarim 3/1 Tel Aviv',
+'4 Hachashmonaim St., Ramat Gan',
+'5/13 Gedera St. Petach Tikva',
+'Shmaryau Levin 21/16. Rishon Lezion',
+'3/2 Ha\'Irus St. Tel Aviv',
+'12/3 Tzvi Shapira st. Holon',
+'28/13 Hadar St. Ramat Gan',
+'18 Hatuval St Ramat Gan',
+'elol 5/5 ashdod Ashdod',
+'4 Igal Alon St Hertzlia',
+'Yom Ahkipurim 11/8 Hulon',
+'apisga 4/1 Arie',
+'22 Harav Yosef Haim St Or-Yahuda',
+'Hana Senesh 4 Tel Aviv',
+'5 Hashita St Kfar Netter',
+'4/9 Hakneset St Hertzlia',
+'7 Rabi Meir St Tel Aviv',
+'6/8 Avner Ben Ner St. Nes-Tziona',
+'Ana frank 5 ',
+'Bat Yam Bat Yam',
+'Amorag 12 St Binyamina',
+'88/38 Hazeitim st Givat Shmuel',
+'Tsirlson 9 St. Tel-Aviv',
+'HaEmaot 7 St Nes-Tsiona',
+'Shimon Ben Tzvi 14 Givatayim',
+'Ehud Manor 7/8 St; Be\'er-Yaakov.',
+'22/56 HA\'alonim St. Natanya',
+'kibuts neser sirani ',
+'Hahalutzim 8 Bat Yam',
+'Mosinzon 1/6 Tel Aviv',
+'Hakfar 11/5',
+'kiryat Ono kiryat Ono',
+'Hatehena 13 Kiryat-Uno',
+'Aharon Beker 9 Tel Aviv',
+'Haoren str/13',
+'Etz Efrayim ',
+'Mezada 4 Bat-Yam',
+'Sapir 16/1 Gedera',
+'Emek Ahula St. 6/4 Kfar Saba',
+'Hayarden st 53/2 Ramat Gan',
+'22 Arie Braun St.',
+'Apt. 35 Petach Tikva',
+'Yad Mordehay 8 Jerusalem',
+'Hatamar 3/6 Kiryat Ono',
+'Mendelbelt 9/8 Herzelya',
+'Barkan 51 st. Rosh Haayin',
+'96/43 Hayarden st. Ramat Gan',
+'7 Havazelet st Ramat Gan',
+'Golda Meir 8/42 Hod Hasharon',
+'Tabenkin Bat Yam',
+'Ben-Zvi 24 Givataim',
+'tzayitlin 13/8 Tel- Aviv',
+'Eliezer 2/17 Reshon Le Zion',
+' Shavei Shomron',
+'Borochov 13 Givatayim',
+'4 Har Sinai St. Raanana',
+'5 Meir Shfiya Street Petach Tikva',
+'Mifraz Shlomo 70/40 Holon',
+'8 Saifan St. Ein Vered',
+'Avital 83. Reut',
+'Herzel 59/7 Ramat Gan',
+'Aeyilon 73 Rosh Aayin',
+'Almagor 15/6 Tel Aviv',
+'Zeiger St. 3 Rishon Lezion Rishon Le Zion',
+'Menahem 19/4 Bnay Brak',
+'Moshav Beit Arif',
+'Meshek 48 B Shoham',
+'Kitsiz 8 Tel Aviv',
+'8 Max Shine St. Rehovot',
+'3/15 Asirey Tzion St. Petach Tikva',
+'7 Hagolan St. Tel Aviv',
+'Ani Maamin 1 Tel-Aviv',
+'Sheshet Yamim 2/2 Ariel',
+'Hel HaAvir 3/56 Rishon Le Zion',
+'Kakal 22 Givataim',
+'Mesinei Negba 3/3 Herzelia',
+'Simch 3 Ramat gan',
+'Barzilai Israel 10/6 Hulon',
+'20 Hoshen St. Shimshit',
+'Malchey Israel 36 Rishon Leztion',
+'haistadrut 23/13 Hulon',
+'Mayzner 1 Petach - Tikva',
+'Marzuk 6/8 Hertzliya',
+'Israel Guri 24 Tel Aviv',
+'Levi Eshkol 13/26 Natanyia',
+'3 Pragim St. Herzliya',
+'Tel-Hai 100 apartment 5 Kfar Saba',
+'9 Hirshfeld st. Rishon Le Tziyon',
+'42, Kehilat Warsaw St. Tel Aviv',
+'33 hailtit Rishon Le-Zion',
+'Moshav Bneya 321 Moshav Benya 321',
+'7 Zeelon stNeve Savyon Or Yeuda',
+'Dolev 42 Gedera',
+'2 Sapir st. Kdumim',
+'21 Harav-Maimon St. Apartment 21 Bat-Yam.',
+'Yigal Yadin 9 Holon',
+'20 Hana Senesh st. Herzelia',
+'15A Ha\'oranim st Ganey-Tikva',
+'26 Rabin st. Kiryat Ono',
+'5/59 Wangruber St. Petach Tikva',
+'Kdoshey Hashoa 2 Ganey-Tikva',
+'D.N. Shimshon 99803',
+'Kibbutz Tzora Kibbutz Tzora',
+'3/16 Remez st. Ramat Hasharon',
+'Ehad Haam 98. Tel Aviv',
+'14 Shimhon Ben Zvi st.',
+'. Givhataim',
+'28 VOLFSON Rishon Le Tziyon',
+'Emanuel Zamir st.',
+'Appartment No. 4/9 Petah Tikva',
+'6/20 San Martin St. Lod',
+'10/34 Shaul Hamelech St Kiryat Ono',
+' 3 Yehuda Hanase., Ramat- Gan',
+' 10 Geula St; Kfar-Saba',
+'19/9 Dov-Hoz St., Kfar-Saba',
+'137/11 Ben Yehuda St. Tel Aviv',
+' 10 Haneviim St. Rosh-HaAyin',
+'6/5 Ussishkin St. Herzliya',
+' Kibutz Nitzanim');
+
+//var address = new Array(3,4,5);
+var i;
+for (i=0;i<address.length;i++)
+{
+//	var line = i + "==>" + address[i] + "<br>";
+//	document.write(line); 
+}
+
+</script>
+
+
+    <script type="text/javascript">
+	var i = 0;
+	var res = "";
+    var map = null;
+    var geocoder = null;
+
+    function initialize() {
+      if (GBrowserIsCompatible()) {
+        map = new GMap2(document.getElementById("map_canvas"));
+        map.setCenter(new GLatLng(37.4419, -122.1419), 1);
+        map.setUIToDefault();
+        geocoder = new GClientGeocoder();
+      }
+	  
+    }
+
+    function showAddress(add) {
+      if (geocoder) {
+        geocoder.getLatLng(
+          add,
+          function(point) {
+            if (!point) {
+              res += (add + "=NA(),=NA()<br>");
+            } else {
+              res += (add + ',' + point.k + "," + point.D + "<br>");
+            }
+			div.innerHTML = res;
+			i++;
+			if (i<address.length)
+			{
+				showAddress(address[i]);
+			}
+          }
+        );
+      }
+    }
+
+
+	var div;
+	
+function ShowAll()
+{	
+	div = document.getElementById('status');
+	i = 0;
+	showAddress(address[i]);
+
+}
+    </script>
+  </head>
+
+  <body onload="initialize()" onunload="GUnload()">
+      <div id="map_canvas" style="width: 600px; height: 400px"></div>
+	  <div id="status" style="width: 600px; height: 400px"><input type=button value='Go' onclick='ShowAll()'></div>
+    </form>
+
+  </body>
+</html>
+

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Mountain Biking</title>
+	<meta name="description" content="Mountain Biking" />
+	<meta property="og:title" content="Mountain Biking" />
+	<meta property="og:site_name" content="Da-Li"/>
+	<meta property="og:description" content="Orit and Ron Riding page" />
+	<meta property="og:image" content="http://www.da-li.co.il/static/ge/images/ride.jpg" />
+	</head>
+   <link href="https://google-developers.appspot.com/maps/documentation/javascript/examples/default.css" rel="stylesheet">
+ 	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCJx0e4TWAUKpOHtP4-qgV5MMOmhoOmMOY"></script>
+	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+	<script type="text/javascript" src="v3_ll_grat.js"></script>
+	<script>
+		var chart;
+		var options = {
+			lineWidth: 1
+			,hAxis: { title: "Distance (Km)"}
+			,vAxis: { title: "Height (m)"}
+			,crosshair: { trigger: 'both' }   // Display crosshairs.
+			,legend: {position: 'none'}
+			,explorer: { 
+			actions: ['dragToZoom', 'rightClickToReset'],
+			axis: 'horizontal',
+			keepInBounds: true,
+			maxZoomIn: 4.0		//	,backgroundColor: '#EEE'
+			}
+			};
+
+		var map;
+		var rides;
+		var ridesbyyear;
+		var hikes;
+		var hikesall;
+		var marker;
+		var count = 0;
+		var opacity = 1.0;
+		var chartdiv;
+		var files = ["norway.kmz","romania-all.kmz","munich.kmz","c2cs-actual.kmz","berlin-ride.kmz","france2015.kmz","torbole.kmz","usa-2012.kmz","newall.kmz"];
+		var TripName = ["Norway 2017 &#x1f6b5; ","Romania 2017","Munich 2017","Scotland 2016 &#x1f6b5; ","Berlin 2016","France 2015 &#x1f6b5;","Italy 2013 &#x1f6b5;","USA 2012","Israel"];
+		var  yearlayer = new Array();
+		var imageBounds = new google.maps.LatLngBounds(
+			  new google.maps.LatLng(29.50856990328634, 31.98952573813994),
+			  new google.maps.LatLng(34.51937864774265, 37.66048568588892));
+		var watchid = null;
+//		google.load('visualization', '1.0', {'packages':['corechart']}); 
+		google.charts.load('current', {'packages':['corechart'],'callback': CreateChart});
+		function CreateChart()
+		{
+			chart = new google.visualization.LineChart(document.getElementById('chart'));
+		}
+		function initialize() {
+        var myLatlng = new google.maps.LatLng(32,34);
+        var mapOptions = {
+//          zoom: 8,
+//          center: myLatlng,
+//          mapTypeId: google.maps.MapTypeId.ROADMAP
+			mapTypeId: google.maps.MapTypeId.TERRAIN,
+			mapTypeControlOptions: {
+				position: google.maps.ControlPosition.TOP_RIGHT,
+				rotateControl: true
+			}
+        }
+
+	
+
+		var ccount = 33;
+		
+        map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+	  	chartdiv = document.getElementById( 'chartbox');
+		ldiv = document.getElementById( 'legend');
+		fillLegend();
+		ldivh = document.getElementById( 'legendh');
+//		chart = new google.visualization.LineChart(document.getElementById('chart'));
+
+//        rides = new google.maps.KmlLayer('http://da-li.co.il/static/ge/newall.kmz?date=' + ccount);
+//       rides.setMap(map);
+//        hikes = new google.maps.KmlLayer('http://da-li.co.il/static/ge/ShvilAll.kmz?date=' + ccount);
+//        hikesall = new google.maps.KmlLayer('http://da-li.co.il/static/ge/All-Hiking.kmz?date=' + ccount);
+//		ridesbyyear = new google.maps.KmlLayer('http://da-li.co.il/static/ge/newallbyyear.kmz?date=' + ccount);
+//		google.maps.event.addListener(rides, 'click', function(event) {
+//          var content = event.featureData.infoWindowHtml;
+//			getprofile(content);
+//			});
+
+		for (i = 0;i<=files.length;i++)
+		{
+			yearlayer['l'+i] = new google.maps.KmlLayer('http://da-li.co.il/static/ge/' + files[i] + '?date=' + ccount);
+			yearlayer['l'+i].setMap(map);
+//			google.maps.event.addListener(yearlayer['l'+i], 'click', function(event) {
+//			  var content = event.featureData.infoWindowHtml;
+//				getprofile(content);
+//				});
+		}
+		marker = new google.maps.Marker({});
+//		weather = new google.maps.GroundOverlay('http://www.ims.gov.il/Ims/Pages/RadarImage.aspx?Row=9&TotalImages=10&LangID=1&Location=&noca=' + count,      imageBounds);
+		weather = new google.maps.GroundOverlay('http://meteo-logic.gmapsradar.s3.amazonaws.com/overlays/out0.png?rnd=' + count,      imageBounds);
+
+		weather.setOpacity(opacity);
+		setTimeout(alignMap,4000);	
+      }
+	  function alignMap()
+	  {
+	  		var sw = new google.maps.LatLng( 30, -35 );
+			var ne = new google.maps.LatLng( 70, 35 );
+			var latlngbounds = new google.maps.LatLngBounds(sw,ne);
+			map.setCenter(latlngbounds.getCenter());
+			map.fitBounds(latlngbounds); 
+	  }
+	  function ToggleOverlay(ol,state)
+	  {
+		if (state)
+		{
+			ol.setMap(map);
+		}
+		else
+		{
+			ol.setMap(null);
+		}
+	  }
+	  function ToggleYear(year,state)
+	  {
+		if (state)
+		{
+			yearlayer['l'+year].setMap(map)
+		}
+		else
+		{
+			yearlayer['l'+year].setMap(null)
+		}
+	  }
+	  function ToggleOverlayNum(num,state)
+	  {
+		var ol = yearlayer['l'+num];
+		ToggleOverlay(ol,state);
+	  }
+	  function trackLocation(state)
+	  {
+		if (state)
+		{
+			if (watchid == null)
+			{
+				var options = {  enableHighAccuracy: true };
+				watchid = navigator.geolocation.watchPosition(SetPositon,error,options);
+			}
+			marker.setMap(map);
+		}
+		else
+		{
+			marker.setMap(null);			
+		}
+	  }
+	  function error(err)
+	{
+	}
+	function SetPositon(pos)
+	{
+		lat = pos.coords.latitude;
+		lon = pos.coords.longitude;
+		marker.setPosition( new google.maps.LatLng( lat, lon ) );
+	}
+	
+var timerId;
+
+function getprofile(t)
+{
+		var xmlhttp;
+		if (window.XMLHttpRequest)
+		{// code for IE7+, Firefox, Chrome, Opera, Safari
+			xmlhttp=new XMLHttpRequest();
+		}
+		else
+		{// code for IE6, IE5
+			xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+		}
+		xmlhttp.onreadystatechange=function()
+		{
+			if (xmlhttp.readyState==4)
+			{
+				if (xmlhttp.status==200)
+				{
+					update(xmlhttp.responseText);
+				}
+//				polltimer = setTimeout("Poll()",Timeout);
+			}
+		}
+		//  http://www.da-li.co.il/kapon/map/?name=ron&lat=10&lon=40
+
+		var m = t.match(/0em">[\w-_ ]+/);
+		var name = m[0].substr(5,100);
+
+		
+		var query = "profile/" + name + ".json";
+		xmlhttp.open("GET",query);
+		xmlhttp.send();
+}
+
+
+
+function update(t)
+{
+//	alert(t);
+//	alert(name);
+//	return;
+	var a = JSON.parse(t);
+	chart.draw(google.visualization.arrayToDataTable(a.data), options);
+	document.getElementById('chatdesc').innerHTML = a.description
+	chartdiv.style.visibility = 'visible';
+	if (timerId == null)
+	{
+	}
+	else
+	{
+		clearTimeout(timerId);
+	}
+	timerId = setTimeout(function(){ chartdiv.style.visibility = 'hidden'; }, 60000);
+}
+
+function closeProfile()
+{
+	chartdiv.style.visibility = 'hidden';
+	if (timerId == null)
+	{
+	}
+	else
+	{
+		clearTimeout(timerId);
+	}	
+}
+
+var isAndroid = false;
+if(navigator.userAgent.match(/Android/i))
+{
+	isAndroid = true;
+}
+
+function ToggleLegnd()
+{
+	if (ldiv.style.visibility == 'hidden')
+	{
+		ldiv.style.visibility = 'visible';
+		ldivh.style.visibility = 'hidden';		
+	}
+	else
+	{
+		ldiv.style.visibility = 'hidden';
+		ldivh.style.visibility = 'visible';		
+	}
+}
+
+
+
+function fillLegend()
+{
+	var html = "";
+	for (i=0;i<files.length;i++)
+	{
+		html += ("<input type='button' style='font-size:25px;font-family:Arial;width:240px;text-align:left;' onclick='ToggleOverlayNum(" + i + ",true)' value='" + TripName[i] + "'><br>");
+	}
+	html += ("<input type='button' style='font-size:25px;font-family:Arial;width:120px;' value='X' onclick='ToggleLegnd()'><input type='checkbox' onchange='ToggleGrid(this.checked)'>Gridline");
+	ldiv.innerHTML = html;
+}
+
+function ToggleGrid(val)
+{
+	if (val)
+	{
+		grid = new Graticule(map, true);
+	}
+	else
+	{
+		grid.setMap(null);
+	}
+}
+
+
+	  </script>
+  </head>
+  <body onload="initialize()">
+    <div id="map-canvas" style='border-radius: 25px;'></div>
+	<div id='chartbox' style='position:absolute;top:100px;background-color:white;left:40px;z-index:1000;width:900px;height:300px;box-shadow: 10px 10px 5px rgba(240,80,50,0.45);visibility:hidden;'>
+	<div id='chatdesc' onclick='closeProfile()' style='cursor:pointer;top:0;width:100%;height:20px;background-color:rgba(0,255,0,0.5);text-align:center;'></div>
+	<div id='chart' style='width:100%;height:90%;'></div>
+
+	</div>
+	<div id='legend' style='font-size:20px;font-family:Arial;position:absolute;top:5px;left:10px;background-color:rgba(255,255,255,0.5);border-radius:5px;visibility:hidden;'>
+	</div>
+	<div id='legendh' style='font-size:20px;font-family:Arial;position:absolute;top:5px;left:10px;background-color:rgba(255,255,255,0.5);border-radius:5px;'>
+	<input type='button' style='font-size:25px;font-family:Arial;' value='Legend' onclick='ToggleLegnd()'>
+	</div>
+  </body>
+</html>
+
+ '

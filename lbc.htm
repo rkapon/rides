@@ -1,0 +1,544 @@
+<html>
+<style>
+path:hover
+{
+	stroke-width:2.0;
+}
+.graph
+{
+	background: linear-gradient(to right, white,#aaaaaa,white);
+	box-shadow: 5px 5px 5px #888888;
+	border-radius: 5px;
+    border: 1px solid black;
+    padding: 20px; 
+    width: 90%;
+    height: 350px; 
+}
+</style>
+<body>
+<div>
+<select onchange='cbw=1*this.value;CreateCharts();'>
+<option value=5>5MHz</option>
+<option value=10>10MHz</option>
+<option value=20>20MHz</option>
+<option value=40 selected>40MHz</option>
+</select>
+<input type=button onclick='chart.toggleseries(0);chart2.toggleseries(0);chart3.toggleseries(0);' value='Toggle HBS'>
+<input type=button onclick='chart.toggleseries(1);chart2.toggleseries(1);chart3.toggleseries(1);' value='Toggle HSU'>
+<input type=button onclick='chart.toggleseries(2);chart2.toggleseries(2);chart3.toggleseries(3);' value='Toggle HBS (Legacy)'>
+<input type=button onclick='chart.toggleseries(3);chart2.toggleseries(3);chart3.toggleseries(4);' value='Toggle HSU (Legacy)'>
+W <input type=number value=200 onchange='SetWidth(this.value);'> <input type=button onclick='toggle(this);' value='><' >
+</div>
+<div style='width:100%;overflow-y:auto;height:90%'>
+<div id='chart3' class='graph'>
+</div>
+<div id='chart2' class='graph'>
+</div>
+<div id='chart' class='graph'>
+</div>
+</div>
+<script>
+
+var AllCharts = new Array();
+
+
+function SetWidth(w)
+{
+	var i;
+	for (i=0;i<AllCharts.length;i++)
+	{
+		setw(window.innerWidth,AllCharts[i]);
+	}
+}
+
+
+function toggle(button)
+{
+	var i;
+	if (button.value == "<>")
+	{
+		for (i=0;i<AllCharts.length;i++)
+		{
+			setw(0.9 *window.innerWidth,AllCharts[i]);
+		}
+		button.value = "><";
+	}
+	else
+	{
+		for (i=0;i<AllCharts.length;i++)
+		{
+			setw(600,AllCharts[i]);
+		}
+		button.value = "<>";		
+	}
+}
+
+var ratio =  130/530;
+var chart,chart2,chart3;
+
+function setw(w,c)
+{
+	var div = c.div;
+	div.style.width = w + "px";
+	div.style.height = (w * ratio) + "px"; 
+}
+
+function fSeries(f,style)
+{
+	this.gety = function (x){  return this.f(x); } ;
+	this.f = f;
+	this.style = style;
+	this.visible = 1;
+}
+
+function sSeries(yvalues,style)
+{
+	this.yvalues = yvalues;
+	this.gety = function(x) { return this.yvalues[x];}
+	this.style = style;
+	this.visible = 1;
+} 
+
+function Chart(divname,xvalues)
+{
+	this.div = document.getElementById(divname);
+	this.xvalues = xvalues;
+	this.yseries = new Array();
+	this.draw = function()
+	{
+		var html = "<svg viewbox='-40 -20 550 130'>"
+		var i;
+//		html += ("<path d='M0 0 L500 0 L500 200 L0 200 L0 0' stroke='red' stroke-width='0.1' fill='none'></path>");
+		html += ("<path d='M" + this.offsetx  + "  " + (this.offsety + this.miny *  this.scaley) + " L" + (this.offsetx + this.xvalues[this.xvalues.length-1] *  this.scalex) + " " + (this.offsety + this.miny *  this.scaley) + "' " + this.xstyle + "></path>");
+		html += ("<path d='M" + this.offsetx  + "  " + (this.offsety + this.miny *  this.scaley) + " L" + this.offsetx + " " + (this.offsety + this.maxy *  this.scaley) + "' " + this.xstyle + "></path>");
+
+		var texty = this.offsety + this.miny *  this.scaley + 10;
+		var stepy = (this.maxy - this.miny)/10; 
+		for (i=0;i<10;i++)
+		{
+			var j = Math.floor(this.xvalues.length/10 * i);  
+			var y = this.miny + i * stepy;
+			html += ("<text style='font: 6px arial;text-anchor:middle' fill='black' x='" + (this.offsetx + this.xvalues[j] *  this.scalex) + "' y='" + (texty) + "' direction='ltr'>" +  this.xvalues[j] + "</text>");
+			if (i > 0)
+			{
+				html += ("<path d='M" + this.offsetx  + "  " + (this.offsety + y *  this.scaley) + " L" + (this.offsetx + this.xvalues[this.xvalues.length-1] *  this.scalex) + " " + (this.offsety + y *  this.scaley) + "' " + this.gridstyle + "></path>");
+				html += ("<path d='M" + (this.offsetx + this.xvalues[j] *  this.scalex)  + "  " + (this.offsety + this.miny *  this.scaley) + " L" + (this.offsetx + this.xvalues[j] *  this.scalex) + " " + (this.offsety + this.maxy *  this.scaley) + "' " + this.gridstyle + "></path>");
+			}
+			html += ("<text style='font: 6px arial;text-anchor:end;alignment-baseline:middle;' fill='black' x='-5' y='" + (this.offsety + y *  this.scaley) + "' direction='ltr'>" +  this.formaty(y.toFixed(0)) + "</text>");
+		}
+		j = this.xvalues.length - 1;
+		y = this.maxy;
+		html += ("<text style='font: 6px arial;text-anchor:middle' fill='black' x='" + (this.offsetx + this.xvalues[j] *  this.scalex) + "' y='" + (texty) + "' direction='ltr'>" +  this.xvalues[j] + "</text>");
+		html += ("<text style='font: 6px arial;text-anchor:end;alignment-baseline:middle;' fill='black' x='-5' y='" + (this.offsety + y *  this.scaley) + "' direction='ltr'>" +  this.formaty(y.toFixed(0)) + "</text>");
+
+		for (i = 0; i < this.yseries.length;i++) 
+		{
+			if (this.yseries[i].visible)
+			{
+				html += ("<path d='M" + (this.offsetx + this.xvalues[1] *  this.scalex) +  " " +   (this.offsety + this.yseries[i].gety(this.xvalues[1]) * this.scaley) + " ");
+				var j;
+				for (j = 1; j < xvalues.length; j++)
+				{
+	//				html += ("["  + j + "," + this.yseries[i].gety(j) + "]<br>");
+					html += ("L" + (this.offsetx + this.xvalues[j] *  this.scalex) +  " " + (this.offsety + this.yseries[i].gety(this.xvalues[j]) * this.scaley) + " ");
+				}
+				html += (" ' " + this.yseries[i].style + "></path>");
+			}
+		}
+		html +=  "</svg>";
+		this.div.innerHTML = html;
+	}
+	this.addSeries = function(s) { this.yseries[this.yseries.length] = s;};
+	this.toggleseries = function(s) { this.yseries[s].visible = 1 - this.yseries[s].visible; this.draw();};
+	this.scalex = 12.5;
+	this.offsetx = 0;
+	this.scaley = -1;
+	this.offsety = -10;
+	this.xstyle = "stroke='black' stroke-width='0.6' fill='none'";
+	this.ystyle = "stroke='black' stroke-width='0.6' fill='none'";
+	this.gridstyle = "stroke='lightgray' stroke-width='0.2' fill='none'";
+	this.miny = -100;
+	this.maxy = 0;
+	this.formaty = function(y){return y;};
+}
+
+var a = new Array();
+var y = new Array();
+var i;
+
+for (i = 0;i <= 160; i++)
+{
+	a[i] = i/4;
+	y[i] = Math.random();
+	
+}
+
+function FreeSpace(f,x)
+{
+	return 32.45+20*Math.log(f*1000)/Math.log(10)+10*2*Math.log(x)/Math.log(10);
+}
+
+
+function RSS(f,tx,txcab,txgain,x,rxcab,rxgain)
+{
+	return tx - txcab + txgain - FreeSpace(f,x) - rxcab + rxgain;
+}
+
+var txcabbase = 0;
+var txgainbase = 23;
+txgainbaseLegacy = 15;
+var txcabhsu = 0;
+var txgainhsu = 23;
+var freq = 5.8;
+var cbw = 40;
+var RFD = 1250;
+var BWOverheadFactor = 27;
+
+
+function BaseRss1(x)
+{
+	return CalculatedRssBase[x];
+}
+
+function HsuRss1(x)
+{
+	return CalculatedRssHsu[x];
+}
+
+
+var TxHbs = new Array(25,25,25,25,25,25,25,25);
+var TxHsu = new Array(25,25,25,24,21,19,18,18);
+var SensativityHbs = new Array(-88,-86,-83,-81,-77,-72,-70,-67);
+var SensativityHsu = new Array(-88,-86,-83,-81,-77,-72,-70,-67);
+var WL2KRates5	= new Array(1.63,3.25,4.88,6.50,9.75,13,14.63,16.25,3.25,6.5,9.75,13,19.5,26,29.25,32.5);
+var WL2KRates10 = new Array(3.25,6.5,9.75,13,19.5,26,29.25,32.5,6.5,13,19.5,26,39,52,58.5,65);
+var WL2KRates20 = new Array(7.3125,14.625,21.9375,29.25,43.875,58.5,65.8125,73.125,14.625,29.25,43.875,58.5,87.75,117,131.625,146.25);
+var WL2KRates40 = new Array(15,30,45,60,90,120,135,150,30,60,90,120,180,240,270,300);
+var WL2KRateNames = new Array("BPSK 0.5","QPSK 0.5","QPSK 0.75","16-QAM 0.5","16-QAM 0.75","64-QAM 0.66","64-QAM 0.75","64-QAM 0.83","","","","");
+
+var CalculatedRssBase = new Array();
+var CalculatedRssHsu = new Array();
+var CalculatedRssBaseLegacy = new Array();
+var CalculatedRssHsuLegacy = new Array()
+
+var SenseOffset = new Array();
+SenseOffset[5] = 6;
+SenseOffset[10] = 3;
+SenseOffset[20] = 0;
+SenseOffset[40] = -3;
+
+
+function BaseRate(x)
+{
+	var i;
+	var pl = FreeSpace(freq,x) - txgainbase + txcabbase - txgainhsu + txcabhsu;
+	for (i=SensativityHbs.length-1;i>=0;i--)
+	{
+		rss = TxHbs[i] - pl;  
+		if (rss > SensativityHbs[i] - SenseOffset[cbw])
+		{
+			CalculatedRssBase[x] = rss;
+			return i;
+		}
+	}
+	return -1;
+	
+}
+
+function BaseRateLegacy(x)
+{
+	var i;
+	var pl = FreeSpace(freq,x) - txgainbaseLegacy + txcabbase - txgainhsu + txcabhsu;
+	for (i=SensativityHbs.length-1;i>=0;i--)
+	{
+		rss = TxHsu[i] - pl;  
+		if (rss > SensativityHbs[i] - SenseOffset[cbw])
+		{
+			CalculatedRssBaseLegacy[x] = rss;
+			return i;
+		}
+	}
+	return -1;	
+}
+
+function HsuRate(x)
+{
+	var i;
+	var pl = FreeSpace(freq,x) - txgainhsu + txcabhsu - txgainbase + txcabbase;
+	for (i=SensativityHsu.length-1;i>=0;i--)
+	{
+		rss = TxHsu[i] - pl;
+		if (rss > SensativityHsu[i] - SenseOffset[cbw])
+		{
+			CalculatedRssHsu[x] = rss;
+			return i;
+		}
+	}
+	return -1;
+}
+
+function HsuRateLegacy(x)
+{
+	var i;
+	var pl = FreeSpace(freq,x) - txgainhsu + txcabhsu - txgainbaseLegacy + txcabbase;
+	for (i=SensativityHsu.length-1;i>=0;i--)
+	{
+		rss = TxHsu[i] - pl;
+		if (rss > SensativityHsu[i] - SenseOffset[cbw])
+		{
+			CalculatedRssHsuLegacy[x] = rss;
+			return i;
+		}
+	}
+	return -1;
+}
+
+
+function CalcXputHbs(x)
+{
+	HbsCapacity[x] = CalculateXput(x,BaseRate(x));
+	return HbsCapacity[x];
+}
+
+function CalcXputHbsLegacy(x)
+{
+	HbsCapacityLegacy[x] = CalculateXput(x,BaseRateLegacy(x));
+	return HbsCapacityLegacy[x];
+}
+
+function CalcXputHsu(x)
+{
+	HsuCapacity[x] = CalculateXput(x,HsuRate(x));
+	return HsuCapacity[x];
+}
+
+
+function CalcXputHsuLegacy(x)
+{
+	HsuCapacityLegacy[x] = CalculateXput(x,HsuRateLegacy(x));
+	return HsuCapacityLegacy[x];
+}
+
+function Aggregate(x)
+{
+	return HsuCapacity[x] + HbsCapacity[x];
+}
+
+
+function AggregateLegacy(x)
+{
+	return HsuCapacityLegacy[x] + HbsCapacityLegacy[x];
+}
+
+var HbsCapacity = new Array();
+var HsuCapacity = new Array();
+var HbsCapacityLegacy = new Array();
+var HsuCapacityLegacy = new Array();
+
+
+function CalculateXput(x,rate)
+{
+	var crate;
+	var duration;
+	var SD;
+	var MinNumOfSymbols;
+
+	var EthernetServiceSupported = 1;
+	var MaxMpduLen				= 4092;
+	var OrigMPDUDelimiterSize	= 4;
+	var NumOfMpdusTheoretic;
+	var NumOfMpdusInEthOnlyDeFacto;
+	var NumOfMpdusInTdmDeFacto;
+	var MpduDelimiter			= 40;
+	var SwMaxA_MpduLen20		= (3*MaxMpduLen) + (3*OrigMPDUDelimiterSize) + 2*MpduDelimiter;
+	var SwMaxA_MpduLenA20		= (5*MaxMpduLen) + (5*OrigMPDUDelimiterSize) + 4 * MpduDelimiter;
+	var SwMaxA_MpduLen			= SwMaxA_MpduLen20;
+	var SwMaxA_MpduLenA			= SwMaxA_MpduLenA20;
+
+	var MOVHL = 51;
+	var RemainEthernetDataGrossSize;
+	var aduration;
+	var Preamble;
+	var NumOfMpdusInEthOnlyA;
+	var MaxNumberOfMpdusInAmpdu = 5;
+	var MaxNumberOfMpdusInAmpduAsym = 8;
+	var RemainEthernetDataGrossSizeA;
+	var BlocksInFirst;
+	var BlocksInLast;
+	var ExtraMpduOverheadE1 = 0;
+	var ExtraMpduOverheadT1 = 0;
+	var NormalizedPPF = 0;
+
+	switch (cbw)
+	{
+		case 5:
+			crate =  WL2KRates5[(rate+8)];
+			SwMaxA_MpduLen = SwMaxA_MpduLen20; // We left it as the 20 MHz. we will consider to change upper limit if needed.
+			SwMaxA_MpduLenA = SwMaxA_MpduLenA20;									
+			SD = 16;
+			MinNumOfSymbols = 15;
+			break;
+		case 10:
+			crate =  WL2KRates10[(rate+8)];
+			SwMaxA_MpduLen = SwMaxA_MpduLen20; // We left it as the 20 MHz. we will consider to change upper limit if needed.
+			SwMaxA_MpduLenA = SwMaxA_MpduLenA20;	
+			SD = 8;
+			MinNumOfSymbols = 23;
+			break;
+		case 20:
+			crate =  WL2KRates20[(rate+8)];
+			SwMaxA_MpduLen = SwMaxA_MpduLen20;
+			SwMaxA_MpduLenA = SwMaxA_MpduLenA20;						
+			SD = 4;
+			MinNumOfSymbols = 32;
+			break;
+		case 40:
+			crate =  WL2KRates40[(rate+8)];
+			SwMaxA_MpduLen = SwMaxA_MpduLen20 * 2 + 800; // The + 800 is not accurate, but let us some protection is case of ireasonable results
+			SwMaxA_MpduLenA = SwMaxA_MpduLenA20 * 2 + 800;	
+			SD = 4;
+			MinNumOfSymbols = 32;
+			break;
+	};
+
+
+	
+    PD = Math.round( ( (1000 * x) / 300) + 0.499);
+	duration = Math.floor(RFD/2- PD - BWOverheadFactor);
+	duration = Math.floor(duration / SD) * SD;
+
+	Preamble = 40;
+
+	if (cbw == 10)
+	{
+		Preamble = Preamble * 2;
+	}
+
+	if (cbw == 5)
+	{
+		Preamble = Preamble * 4;
+	}
+
+
+	aduration = RFD - 2*(BWOverheadFactor + PD + Preamble) - (MinNumOfSymbols * SD);
+
+   	//FrameNet = Math.floor( (duration-Preamble) / SD * crate  * 4 / 8 ) -3;
+   	FrameNet = Math.floor( (duration-Preamble) * crate  / 8 ) -3;
+
+	//AFrameNet = Math.floor( (aduration) / SD * crate  * 4 / 8 ) -3;
+	AFrameNet = Math.floor( (aduration) * crate  / 8 ) -3;
+
+//		alert("Duration (us) =\t" + aduration + "\nFrame Net (B)=\t" + AFrameNet + "\n PD =\t" + PD);
+
+//		alert("PD = \t" + PD +  "\tDuration (us) =\t" + duration + "\nFrame Net (B)=\t" + FrameNet);
+
+	if (FrameNet > SwMaxA_MpduLen)
+	{
+		FrameNet = SwMaxA_MpduLen;
+	}
+
+	if (AFrameNet > SwMaxA_MpduLenA)
+	{
+		AFrameNet = SwMaxA_MpduLenA;
+	}
+
+	NumOfMpdusTheoretic = Math.round( (FrameNet + ( (MaxMpduLen + OrigMPDUDelimiterSize + MOVHL) / 2) - 1) / (MaxMpduLen + OrigMPDUDelimiterSize + MOVHL) );
+	NumOfMpdusInEthOnlyA = Math.round( (AFrameNet + ( (MaxMpduLen + OrigMPDUDelimiterSize + MOVHL) / 2) - 1) / (MaxMpduLen + OrigMPDUDelimiterSize + MOVHL) );
+
+
+	if (NumOfMpdusTheoretic > MaxNumberOfMpdusInAmpdu)
+	{
+		NumOfMpdusTheoretic = MaxNumberOfMpdusInAmpdu;
+	}
+
+	if (NumOfMpdusInEthOnlyA > MaxNumberOfMpdusInAmpduAsym)
+	{
+		NumOfMpdusInEthOnlyA = MaxNumberOfMpdusInAmpduAsym;
+	}
+
+	RemainEthernetDataGrossSize = FrameNet - ( (NumOfMpdusTheoretic - 1) * (MpduDelimiter) );
+
+	RemainEthernetDataGrossSize = RemainEthernetDataGrossSize - (NumOfMpdusTheoretic * MOVHL);
+
+	RemainEthernetDataGrossSizeA = AFrameNet - ( (NumOfMpdusInEthOnlyA - 1) * (MpduDelimiter) );
+
+	RemainEthernetDataGrossSizeA = RemainEthernetDataGrossSizeA - (NumOfMpdusInEthOnlyA * MOVHL);
+
+	if (NumOfMpdusTheoretic > 1)
+	{
+		RemainEthernetDataGrossSize = RemainEthernetDataGrossSize - (NumOfMpdusTheoretic * OrigMPDUDelimiterSize);
+	}
+
+	if (NumOfMpdusInEthOnlyA > 1)
+	{
+		RemainEthernetDataGrossSizeA = RemainEthernetDataGrossSizeA - (NumOfMpdusInEthOnlyA * OrigMPDUDelimiterSize);
+	}
+
+
+	BitRate = RemainEthernetDataGrossSize * 8 * (1000 / RFD);
+	BitRateA = RemainEthernetDataGrossSizeA * 8 * (1000 / RFD);
+	CurrEtherRate = Math.round(BitRate*63/64/100)/10;
+	ACurrEtherRate = BitRateA/1000/64;
+	RoundCurrEtherRate = Math.round(CurrEtherRate*10)/10;
+	return RoundCurrEtherRate;
+}
+
+
+
+function CreateCharts()
+{
+	chart = new Chart('chart',a);
+	chart.addSeries(new sSeries( CalculatedRssBase,"stroke='red' stroke-width='1.0' fill='none'"));
+	chart.addSeries(new sSeries( CalculatedRssHsu,"stroke='green' stroke-width='1.0' fill='none'"));
+	chart.addSeries(new sSeries( CalculatedRssBaseLegacy,"stroke='red' stroke-width='0.4' fill='none' stroke-dasharray='1,1'"));
+	chart.addSeries(new sSeries( CalculatedRssHsuLegacy,"stroke='green' stroke-width='0.4' fill='none' stroke-dasharray='1,1'"));
+	chart2 = new Chart('chart2',a);
+	chart2.scaley = -200/20;
+	chart2.miny = 0;
+	chart2.maxy = 10;
+	chart2.offsety = 88;
+	chart2.addSeries(new fSeries( BaseRate,"stroke='red' stroke-width='1.0' fill='none'"));
+	chart2.addSeries(new fSeries( HsuRate,"stroke='green' stroke-width='1.0' fill='none'"));
+	chart2.addSeries(new fSeries( BaseRateLegacy,"stroke='red' stroke-width='0.4' fill='none' stroke-dasharray='1,1'"));
+	chart2.addSeries(new fSeries( HsuRateLegacy,"stroke='green' stroke-width='0.4' fill='none' stroke-dasharray='1,1'"));
+	chart3 = new Chart('chart3',a);
+	chart3.miny = 0;
+	switch (cbw)
+	{
+		case 5:
+			chart3.maxy = 30;
+			break;
+		case 10:
+			chart3.maxy = 60;
+			break;
+		case 20:
+			chart3.maxy = 150;
+			break;
+		case 40:
+			chart3.maxy = 300;
+			break;
+			
+
+	}
+	chart3.scaley = -100/chart3.maxy;
+	chart3.offsety = 88;
+	chart.formaty = function(y){ return y + " dBm";};
+	chart3.formaty = function(y){ return y + " Mb/s";};
+	chart3.addSeries(new fSeries( CalcXputHbs,"stroke='red' stroke-width='1.0' fill='none'"));
+	chart3.addSeries(new fSeries( CalcXputHsu,"stroke='green' stroke-width='1.0' fill='none'"));
+	chart3.addSeries(new fSeries( Aggregate,"stroke='orange' stroke-width='1.0' fill='none'"));
+	chart3.addSeries(new fSeries( CalcXputHbsLegacy,"stroke='red' stroke-width='0.4' fill='none' stroke-dasharray='1,1'"));
+	chart3.addSeries(new fSeries( CalcXputHsuLegacy,"stroke='green' stroke-width='0.4' fill='none' stroke-dasharray='1,1'"));
+	chart3.addSeries(new fSeries( AggregateLegacy,"stroke='orange' stroke-width='0.4' fill='none' stroke-dasharray='1,1'"));
+	chart2.formaty = function(y){ return WL2KRateNames[1*y];};
+	chart2.draw();
+	chart.draw();
+	chart3.draw();
+	AllCharts[AllCharts.length] = chart;
+	AllCharts[AllCharts.length] = chart2;
+	AllCharts[AllCharts.length] = chart3;
+}
+
+CreateCharts();
+
+</script>

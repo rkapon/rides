@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html style="height: 100%;margin: 0px;padding: 0px">
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Entities location </title>
+    <style>
+      /*
+      
+      table.maps {border-collapse: collapse;background-color:rgba(255,255,255,0.5);}
+      table.maps, tr.maps, td.maps {  border: 1px solid black;background-color:rgba(255,255,255,0.5);text-align:center;}
+      */
+      #map-canvas {height: 600px;margin: 0px;padding: 0px}
+      #textarea_input{height:50px;width:700px;}
+      input.short_text_input{width:20px;}
+      #convertion_res_area{border:1px solid black;width:500px;}
+    </style>
+    <!--<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true"></script>-->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCJx0e4TWAUKpOHtP4-qgV5MMOmhoOmMOY&libraries=visualization"></script>
+   
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.4.3/proj4-src.js"></script>
+
+<script>
+var geocoder;
+var map;
+var heatmap = null;
+var Entities = new Array();
+var heatMapData = new Array();
+var iconsfolder = "http://localhost:8200/static/ge/icons/";
+//var iconsfolder = "http://www.da-li.co.il/static/ge/icons/";
+var south, east, north, west;
+var utm = "+proj=utm +zone=";
+var wgs84 = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs";
+var line_delimiter = ' ';
+var params_delimiter = '\t';
+  
+
+function initialize(map_id) 
+{
+  geocoder = new google.maps.Geocoder();
+  var latlng = new google.maps.LatLng(32.2, 34.8);
+  var mapOptions = {
+    zoom: 15,
+    center: latlng
+  }
+  map = new google.maps.Map(document.getElementById(map_id), mapOptions);
+  
+}
+
+
+function entity_utm(text,x,y,status,id,create_heamap)
+{
+  if (status == undefined) status = 'new';
+  if (id == undefined) id=Entities.length+1;
+  if (create_heamap == undefined) create_heamap = true;
+  geo = utm_2geo(x,y,region);
+  entity (text,geo[0],geo[1],status,id,create_heatmap);
+  
+}
+
+function entity(text,lat,lon,status,id,create_heamap)
+{
+  if (isNaN(lat) || isNaN(lon)) return;
+  
+  if (status == undefined) status = 'new';
+  if (id == undefined) id=Entities.length+1;
+  if (create_heamap == undefined) create_heamap = true;
+  this.text = text;
+  this.location = new google.maps.LatLng( lat, lon );
+  this.status = status;
+  this.id = id;
+  this.marker = null;
+  Entities[Entities.length] = this; 
+  if (create_heamap)
+  {
+    try 
+    { heatMapData[heatMapData.length] = {location: new google.maps.LatLng(lat, lon), weight: text}; }
+    catch (err)
+    { pass; }
+  }
+  if (south > lat ) south = lat;
+  if (north < lat) north = lat;
+  if (east < lon) east = lon;
+  if (west > lon) west  = lon;
+}
+
+
+
+
+function showobjects()
+{
+  if (cobject >= Entities.length)
+  {
+    return;
+  }
+  var myobject = Entities[cobject];
+  //myobject.marker = new google.maps.Marker({map: map, position: myobject.location, icon: GetIcon(myobject.icon),title: myobject.text});
+  if (myobject.marker) Entities[cobject].marker.setMap(map)
+  else
+    myobject.marker = new google.maps.Marker({map: map, position: myobject.location, title: myobject.text});
+    
+  cobject++;
+  setTimeout("showobjects()",0);
+}
+
+function GetIcon(icon)
+{
+  return iconsfolder + 'object.png'
+}
+  
+function init_data()
+{
+  hide_locations();
+  hide_heatmap();
+  south = 90;
+  north = -90;
+  east = -180;
+  west= 180;
+  heatmap = null;
+  Entities = [];
+  heatMapData = [];
+  line_delimiter = document.getElementById('line_delimiter_input').value;
+  params_delimiter = document.getElementById('params_delimiter_input').value;
+  if (params_delimiter == "tab") params_delimiter = "\t";
+  document.getElementById('convertion_res_area').innerHTML = '';
+  document.getElementById('convertion_res_div').style.visibility = 'hidden';
+  document.getElementById('action_buttons').style.visibility = 'hidden';
+}
+
+
+ 
+function read_input()
+{
+  init_data();
+  content = document.getElementById('textarea_input').value;
+  //alert(content);
+  lines = content.split(line_delimiter);
+  for (line in lines)
+  {
+      read_line(lines[line]);         
+  }
+  document.getElementById('action_buttons').style.visibility = 'visible';
+  var sw = new google.maps.LatLng( south, west );
+  var ne = new google.maps.LatLng( north, east );
+  var latlngbounds = new google.maps.LatLngBounds(sw,ne);
+  map.setCenter(latlngbounds.getCenter());
+  map.fitBounds(latlngbounds);
+  document.getElementById('textarea_input').value = '';
+}
+
+function convert_coordinates(to)
+{
+  init_data();
+  content = document.getElementById('textarea_input').value;
+  lines = content.split(line_delimiter);
+  result = '';
+  for (line in lines)
+  {
+    coordinates = lines[line].split(params_delimiter)
+    if (to == 'geo') 
+      output  = utm_2geo(coordinates[0],coordinates[1],36);  
+    else 
+      output  = geo_2utm(coordinates[0],coordinates[1],36);  
+    result += output[0]+ "," + output[1] + "<br/>";
+  } 
+  document.getElementById('convertion_res_div').style.visibility = 'visible';
+  document.getElementById('convertion_res_area').innerHTML = result;
+  document.getElementById('textarea_input').value = '';
+}
+
+function geo_2utm(lat,lon,region)
+{
+  myutm = utm + region;
+  return proj4(wgs84,myutm,[lat,lon]);
+}
+
+function utm_2geo(x,y,region)
+{
+  myutm = utm + region;
+  return proj4(myutm,wgs84,[x,y]);
+}
+
+
+function read_line(line)
+{
+  item = line.split(params_delimiter);
+  object = new entity(item[4],item[7],item[8],'new',item[3]);
+  //object = new entity('2',32.1,35.1,'new',2);
+}
+
+function show_locations()
+{
+  cobject = 0;
+  //alert('about to show' + Entities.length + ' entities');
+  showobjects();
+}
+
+
+function show_heatmap()
+{
+  myradius = parseInt(document.getElementById('heamap_radius_input').value);
+  myintensity = parseInt(document.getElementById('heamap_intensity_input').value);
+  
+  heatmapoptions = {radius:myradius}
+  if (heatmap)
+  {
+    //hide_heatmap();
+    heatmap.set('radius', myradius);
+    heatmap.set('maxIntensity', myintensity);
+    
+    heatmap.setMap(map);
+  }
+  else
+  {
+    heatmap = new google.maps.visualization.HeatmapLayer({data: heatMapData,map:map, options:heatmapoptions});
+  }
+}
+
+function hide_locations()
+{
+  for (cobject in Entities)
+  {
+    if (Entities[cobject].marker)
+      Entities[cobject].marker.setMap(null);
+  }
+}
+
+function hide_heatmap()
+{
+  if (heatmap)
+    heatmap.setMap(null);
+}
+
+
+</script>
+</head>
+
+<body style="height: 100%;margin: 0px;padding: 0px">
+    <div id="map-canvas"> </div>
+    <div id="status" style='width:250px;height:500px;position: absolute;top:10px;left:10px;z-index:100;'>  </div>
+    <div id='action_buttons' style='visibility:hidden;'>
+     <input type='button' value='show locations' onclick='show_locations()'>
+     <input type='button' value='show heatmap' onclick='show_heatmap()'>
+     heatmap radius:  <input type='text' id="heamap_radius_input" value=150 >
+     heatmap intensuty  <input type='text' id="heamap_intensity_input" value=40 >
+     &nbsp;&nbsp;&nbsp;&nbsp;
+     <input type='button' value='hide locations' onclick='hide_locations()'>
+     <input type='button' value='hide heatmap' onclick='hide_heatmap()'>
+    </div>
+    
+    Data:  <input type='text' id="textarea_input" />
+    <input type='button' value='read data' onclick='read_input()'>
+    <input type='button' value='geo to utm' onclick='convert_coordinates("utm")'>
+    <input type='button' value='utm to geo' onclick='convert_coordinates("geo")'>
+    &nbsp;&nbsp;
+    line delimiter: <input type='text' id="line_delimiter_input" class="short_text_input" value=' ' >
+    params delimiter: <input type='text' id="params_delimiter_input" class="short_text_input" value='tab' >
+    
+    <div id='convertion_res_div' style='visibility:hidden;'>
+      conversion results:
+      <span id='convertion_res_area'> </span>
+    </div>
+    
+<script>
+  google.maps.event.addDomListener(window, 'load', initialize('map-canvas'));
+</script>
+</body>
+</html>

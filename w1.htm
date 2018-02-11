@@ -1,0 +1,36 @@
+<html>
+
+<div id='inout' style='width=800px;height=20px'>
+</div>
+
+<div id='radar' style='width:800px;border-style:none;'>
+</div>
+
+
+<div id='forcast' style='width:800px;border-style:none;'>
+</div>
+
+<script>
+
+
+var div = document.getElementById('radar');
+var inout = document.getElementById('inout');
+var forcast = document.getElementById('forcast');
+var count=0;
+var fc=0;
+function updateradar()
+{
+	div.innerHTML = "<iframe style='width:560px;height:530px;border-style:none;' src='http://www.ims.gov.il/Ims/Pages/RadarImage.aspx?Row=9&TotalImages=10&LangID=1&Location=&noca=" + count + "'></iframe>";
+	inout.innerHTML = "Last update: [" + count + "/" + fc + "]" + (new Date());
+	if ((count%6) == 0)
+	{
+		forcast.innerHTML = "<iframe  style='width:1100px;height:1200px;border-style:none;' src='http://forecast.uoa.gr/gmap/image/index.php?latlon=32.076175,34.795761&noca=" + count + "'></iframe>";
+		fc++;
+	}
+	count++;
+
+	setTimeout("updateradar()",600000);
+}
+updateradar();
+
+</script>

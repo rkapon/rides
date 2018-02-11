@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <link href="https://google-developers.appspot.com/maps/documentation/javascript/examples/default.css" rel="stylesheet">
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+    <title>KML Click Capture Sample</title>
+    <style>
+      #map {
+       height: 100%;
+       width: 100%;
+       overflow: hidden;
+       float: left;
+       border: thin solid #333;
+       }
+    </style>
+  </head>
+  <body onload='initMap()'>
+  <div id='chart' style='position:absolute;top:100px;left:40px;z-index:1000;width:600px;height:300px;box-shadow: 10px 10px 5px rgba(240,80,50,0.45);visibility:hidden;'></div>
+    <div id="map"></div>
+    <script>
+      var map;
+	  var ccounter = 2;
+	  var chartdiv;
+      var src = 'http://da-li.co.il/static/ge/1.kml?noc=' + ccounter;
+
+      /**
+       * Initializes the map and calls the function that loads the KML layer.
+       */
+      function initMap() {
+	  	chartdiv = document.getElementById( 'chart');
+        map = new google.maps.Map(document.getElementById('map'), {
+          center: new google.maps.LatLng(-19.257753, 146.823688),
+          zoom: 2,
+          mapTypeId: 'terrain'
+        });
+        loadKmlLayer(src, map);
+      }
+
+      /**
+       * Adds a KMLLayer based on the URL passed. Clicking on a marker
+       * results in the balloon content being loaded into the right-hand div.
+       * @param {string} src A URL for a KML file.
+       */
+      function loadKmlLayer(src, map) {
+        var kmlLayer = new google.maps.KmlLayer(src, {
+          suppressInfoWindows: true,
+          preserveViewport: false,
+          map: map
+        });
+        google.maps.event.addListener(kmlLayer, 'click', function(event) {
+          var content = event.featureData.infoWindowHtml;
+//          var testimonial = document.getElementById('capture');
+//          testimonial.innerHTML = content;
+//			alert(content);
+			update(content);
+        });
+      }
+	  var timerId;
+	function update(t)
+{
+//	var a = JSON.parse(t);
+//	chart.draw(google.visualization.arrayToDataTable(a), options);
+	chartdiv.innerHTML = '<iframe src="profile/zichron-2017-01-10.htm" style="overflow:none;width:90%;height:90%;border:none;">';
+	chartdiv.style.visibility = 'visible';
+	if (timerId == null)
+	{
+	}
+	else
+	{
+		clearTimeout(timerId);
+	}
+	timerId = setTimeout(function(){ chartdiv.style.visibility = 'hidden'; }, 60000);
+}
+
+    </script>
+  </body>
+</html>

@@ -1,0 +1,62 @@
+
+<svg style='width:1000px;height:1000px;' viewBox="-300 -300 600 600" >>
+  <path id="arc1" fill="#00ff00" stroke="#446688" stroke-width="0" />
+</svg>
+
+<script>
+
+function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
+  var angleInRadians = (angleInDegrees-90) * Math.PI / 180.0;
+
+  return {
+    x: centerX + (radius * Math.cos(angleInRadians)),
+    y: centerY + (radius * Math.sin(angleInRadians))
+  };
+}
+
+function gup( name )
+{
+	name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+	var regexS = "[\\?&]"+name+"=([^&#]*)";
+	var regex = new RegExp( regexS );
+	var results = regex.exec( window.location.href );
+	if( results == null )
+		return "";
+	else
+		return results[1];
+}
+
+var direction = gup("azimuth");
+
+if (direction == "")
+{
+	direction = 0;
+}
+
+
+function sector(direction)
+{
+	var start = 1*direction -45;
+	var end = start + 90;
+	return describeArc(0, 0, 300, start, end);
+}
+
+function describeArc(x, y, radius, startAngle, endAngle){
+
+    var start = polarToCartesian(x, y, radius, endAngle);
+    var end = polarToCartesian(x, y, radius, startAngle);
+
+    var arcSweep = endAngle - startAngle <= 180 ? "0" : "1";
+
+    var d = [
+        "M", start.x, start.y, 
+        "A", radius, radius, 0, arcSweep, 0, end.x, end.y,
+        "L", x,y,
+        "L", start.x, start.y
+    ].join(" ");
+
+    return d;       
+}
+
+document.getElementById("arc1").setAttribute("d", sector(direction));
+</script>

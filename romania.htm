@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Romania MB. 20-22 September 2017</title>
+	<meta name="description" content="Romania MB. 20-22 September 2017" />
+	<meta property="og:title" content="Romania MB. 20-22 September 2017" />
+	<meta property="og:site_name" content="Da-Li"/>
+	<meta property="og:description" content="Romania MB. 20-22 September 2017" />
+	<meta property="og:image" content="http://www.da-li.co.il/static/ge/images/romania.jpg" />
+	</head>
+    <link href="https://google-developers.appspot.com/maps/documentation/javascript/examples/default.css" rel="stylesheet">
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+	<script type="text/javascript" src="v3_ll_grat.js"></script>
+    <script>
+		var map;
+		var rides;
+		var ridesbyyear;
+		var hikes;
+		var hikesall;
+		var marker;
+		var count = 0;
+		var opacity = 1.0;
+		var imageBounds = new google.maps.LatLngBounds(
+			  new google.maps.LatLng(29.50856990328634, 31.98952573813994),
+			  new google.maps.LatLng(34.51937864774265, 37.66048568588892));
+		var watchid = null;
+		function initialize() {
+        var myLatlng = new google.maps.LatLng(32,34);
+        var mapOptions = {
+//          zoom: 8,
+//          center: myLatlng,
+//          mapTypeId: google.maps.MapTypeId.ROADMAP,
+			mapTypeId: google.maps.MapTypeId.TERRAIN,
+//			mapTypeId: 'satellite',//
+//			mapTypeId: 'roadmap',
+//			mapTypeId: 'hybrid',
+			mapTypeControlOptions: {
+				position: google.maps.ControlPosition.TOP_RIGHT,
+				rotateControl: true
+			}
+        }
+
+		var ccount = 4;
+		ldiv = document.getElementById( 'legend');
+		ldivh = document.getElementById( 'legendh');
+		
+        map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+
+        hikes = new google.maps.KmlLayer('http://da-li.co.il/static/ge/romania-all.kmz?date=' + ccount);
+		hikes.setMap(map);
+
+        rides = new google.maps.KmlLayer('http://da-li.co.il/static/ge/c2cs-plan.kmz?date=' + ccount);
+//        rides.setMap(map);
+//        hikesall = new google.maps.KmlLayer('http://da-li.co.il/static/ge/All-Hiking.kmz?date=' + ccount);
+//		ridesbyyear = new google.maps.KmlLayer('http://da-li.co.il/static/ge/newallbyyear.kmz?date=' + ccount);
+		marker = new google.maps.Marker({});
+//		weather = new google.maps.GroundOverlay('http://www.ims.gov.il/Ims/Pages/RadarImage.aspx?Row=9&TotalImages=10&LangID=1&Location=&noca=' + count,      imageBounds);
+		weather = new google.maps.GroundOverlay('http://meteo-logic.gmapsradar.s3.amazonaws.com/overlays/out0.png?rnd=' + count,      imageBounds);
+
+		weather.setOpacity(opacity);
+
+      }
+	  function ToggleOverlay(ol,state)
+	  {
+		if (state)
+		{
+			ol.setMap(map);
+		}
+		else
+		{
+			ol.setMap(null);
+		}
+	  }
+	  function trackLocation(state)
+	  {
+		if (state)
+		{
+			if (watchid == null)
+			{
+				var options = {  enableHighAccuracy: true };
+				watchid = navigator.geolocation.watchPosition(SetPositon,error,options);
+			}
+			marker.setMap(map);
+		}
+		else
+		{
+			marker.setMap(null);			
+		}
+	  }
+	  function error(err)
+	{
+	}
+	function SetPositon(pos)
+	{
+		lat = pos.coords.latitude;
+		lon = pos.coords.longitude;
+		marker.setPosition( new google.maps.LatLng( lat, lon ) );
+	}
+
+	function ToggleLegnd()
+{
+	if (ldiv.style.visibility == 'hidden')
+	{
+		ldiv.style.visibility = 'visible';
+		ldivh.style.visibility = 'hidden';		
+	}
+	else
+	{
+		ldiv.style.visibility = 'hidden';
+		ldivh.style.visibility = 'visible';		
+	}
+}
+
+function ToggleGrid(val)
+{
+	if (val)
+	{
+		grid = new Graticule(map, true);
+	}
+	else
+	{
+		grid.setMap(null);
+	}
+}
+
+	  </script>
+  </head>
+  <body onload="initialize()">
+    <div id="map-canvas" style='border-radius: 25px;'></div>
+	<div id='legend'  style='font-size:20px;font-family:Arial;position:absolute;top:5px;left:10px;background-color:rgba(255,255,255,0.5);border-radius:5px;;visibility:hidden;'>
+<style>
+table, tr, td {border-collapse: collapse;border: 1px solid black;font-family:Arial;}
+</style>
+<table style='border-collapse: collapse;border: 1px solid black;'>
+<tr><td>Day</td><td>Distance</td><td>Time</td><td>Elevation Gain</td></tr>
+<tr><td style='background-color:rgb(0,255,127)'>&#x1f6b5; Wed, Sep 20</td><td>16.7 Km</td><td>2:03</td><td>450 m</td></tr>
+<tr><td style='background-color:rgb(255,0,0)'>&#x1f6b5; Thu, Sep 21</td><td>20.4 Km</td><td>2:07</td><td>600 m</td></tr>
+<tr><td style='background-color:rgb(0,0,255)'>&#x1f6b5; Fri, Sep 22</td><td>17.8 Km</td><td>2:24</td><td>650 m</td></tr>
+<tr><td>&#x1f6b5; Total</td><td>54.9 Km</td><td>6:34</td><td>1700 m</td></tr>
+<tr><td colspan=2> <a href='norway.kmz'>&#x1F4E5 Download KMZ</a></td><td colspan=2><input type='checkbox' onchange='ToggleGrid(this.checked)'>Gridline</td></tr>
+</table>
+<center>
+	<input type='button' style='font-size:25px;font-family:Arial;' value='X' onclick='ToggleLegnd()'>
+
+	
+	</div>
+	<div id='legendh' style='font-size:20px;font-family:Arial;position:absolute;top:5px;left:10px;background-color:rgba(255,255,255,0.5);border-radius:5px;'>
+	<input type='button' style='font-size:25px;font-family:Arial;' value='Legend' onclick='ToggleLegnd()'>
+	</div>
+  </body>
+</html>
+

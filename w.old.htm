@@ -1,0 +1,217 @@
+
+<html>
+      <style type="text/css">
+body,input
+{
+	font-size:20px;
+	font-family:Arial;
+}
+    </style>
+
+    </style>
+<div id='inout' style='width=800px;height=20px'>
+</div>
+<div id='map' style='width:650px;height:650px;border-style:none;'>
+</div>
+<div style='width=800px;height=20px;'>
+<input type='checkbox' checked onchange='ToggleOverlay(overlay,this.checked)'>Rain Radar | 
+<input type='checkbox' onchange='ToggleOverlay(marker,this.checked)'>View forcast location |
+<input type='checkbox' onchange='trackLocation(this.checked)'> My Location<br>
+
+<span style='font-size;10px;color:red;font-style:italic;'>To change forecast location, click on view the forecast location and drag the marker</span>
+</div>
+
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false">
+</script> 
+
+
+<div id='forcast' style='width:800px;border-style:none;'>
+</div>
+
+<script>
+
+function gup( name )
+{
+	name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+	var regexS = "[\\?&]"+name+"=([^&#]*)";
+	var regex = new RegExp( regexS );
+	var results = regex.exec( window.location.href );
+	if( results == null )
+		return "";
+	else
+		return results[1];
+}
+
+
+
+
+var imageBounds = new google.maps.LatLngBounds(
+      new google.maps.LatLng(29.50856990328634, 31.98952573813994),
+      new google.maps.LatLng(34.51937864774265, 37.66048568588892));
+
+	 
+	  
+var center = imageBounds.getCenter();
+
+var ImsMode = false;
+Opacity = "1.0";
+
+if (gup("old") == "yes")
+{
+	ImsMode = true;
+	Opacity = "0.3";
+}
+
+
+var lat = center.lat();
+var lon = center.lng();
+var count = 0;
+var overlay = null;
+var map = null;
+var latmodel = lat;
+var lngmodel = lon;
+var marker;
+var watchid;
+var mylocationstate = false;
+ //       center: new google.maps.LatLng(32.10845934,34.8409873),
+    function initialize() {
+       map = new google.maps.Map(document.getElementById("map"), {
+       center: new google.maps.LatLng(lat,lon),
+		zoom: 7,
+        mapTypeId: 'roadmap'
+      });
+
+
+	  marker = new google.maps.Marker({draggable:true,animation: google.maps.Animation.DROP});
+		marker.setPosition( new google.maps.LatLng( latmodel, lngmodel ) );
+		createOverlay();
+		updateradar();
+//	google.maps.event.addListener(map, "rightclick", function(event) {
+//		latmodel = event.latLng.lat();
+//		lngmodel = event.latLng.lng();
+//		marker.setPosition( new google.maps.LatLng( latmodel, lngmodel ) );
+//
+//		forcast.innerHTML = "<iframe  style='width:1100px;height:1200px;border-style:none;' src='http://forecast.uoa.gr/gmap/image/index.php?latlon=" + latmodel + "," + lngmodel + "&noca=" + count + "'></iframe>";
+//	});
+	google.maps.event.addListener(marker, 'dragend', function() 
+	{
+		var pos = marker.getPosition()
+		latmodel = pos.lat();
+		lngmodel = pos.lng();
+//		marker.setPosition( new google.maps.LatLng( latmodel, lngmodel ) );
+
+		forcast.innerHTML = "<iframe  style='width:1100px;height:1200px;border-style:none;' src='http://forecast.uoa.gr/gmap/image/index.php?latlon=" + latmodel + "," + lngmodel + "&noca=" + count + "'></iframe>";
+//		geocodePosition(marker.getPosition());
+	});
+
+	}
+
+function createOverlay()
+{
+	if (ImsMode)	
+	{
+		overlay = new google.maps.GroundOverlay('http://www.ims.gov.il/Ims/Pages/RadarImage.aspx?Row=9&TotalImages=10&LangID=1&Location=&noca=' + count,      imageBounds);
+	}
+	else
+	{
+		overlay = new google.maps.GroundOverlay('http://meteo-logic.gmapsradar.s3.amazonaws.com/overlays/out0.png?rnd=' + count,      imageBounds);
+	}
+	overlay.setMap(map);
+	setOpacity(Opacity);
+ }
+ 
+
+	  function ToggleOverlay(ol,state)
+	  {
+		if (state)
+		{
+			ol.setMap(map);
+		}
+		else
+		{
+			ol.setMap(null);
+		}
+	  }
+
+ 
+google.maps.event.addDomListener(window, 'load', initialize);
+	
+function setOpacity(val) {
+  var opacity = parseFloat(val);
+  overlay.setOpacity(opacity);
+  Opacity = val;
+}
+
+function RefreshW()
+{
+	overlay.setMap(null);
+	createOverlay();
+}
+
+var inout = document.getElementById('inout');
+var forcast = document.getElementById('forcast');
+var fc=0;
+function updateradar()
+{
+	RefreshW();
+	inout.innerHTML = "Last update: [" + count + "/" + fc + "]" + (new Date());
+	if ((count%6) == 0)
+	{
+		forcast.innerHTML = "<iframe  style='width:1100px;height:1200px;border-style:none;' src='http://forecast.uoa.gr/gmap/image/index.php?latlon=" + latmodel + "," + lngmodel + "&noca=" + count + "'></iframe>";
+		fc++;
+	}
+	count++;
+
+	setTimeout("updateradar()",600000);
+}
+
+function trackLocation(state)
+{
+	mylocationstate = state;
+	if (state)
+	{
+		if (watchid == null)
+		{
+			var options = {  enableHighAccuracy: true };
+			watchid = navigator.geolocation.watchPosition(SetPositon,error,options);
+		}
+	}
+}
+
+function error(err)
+{
+}
+function SetPositon(pos)
+{
+	if (mylocationstate)
+	{
+		var _latmodel = pos.coords.latitude;
+		var _lngmodel = pos.coords.longitude;
+		if (distance(_latmodel,_lngmodel,latmodel,lngmodel) > 1)
+		{
+			latmodel = _latmodel;
+			lngmodel = _lngmodel;
+			marker.setPosition( new google.maps.LatLng( latmodel, lngmodel ) );
+			forcast.innerHTML = "<iframe  style='width:1100px;height:1200px;border-style:none;' src='http://forecast.uoa.gr/gmap/image/index.php?latlon=" + latmodel + "," + lngmodel + "&noca=" + count + "'></iframe>";
+		}
+	}
+}
+
+function distance(lat1,lon1,lat2,lon2)
+{
+	var decimals = 1;
+    var earthRadius = 6371; // km
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLon = (lon2 - lon1) * Math.PI / 180;
+    var lat1 = lat1 * Math.PI / 180;
+    var lat2 = lat2 * Math.PI / 180;
+ 
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    var d = earthRadius * c;
+	return d;
+}
+
+
+</script>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Berlin</title>
+    <link href="https://google-developers.appspot.com/maps/documentation/javascript/examples/default.css" rel="stylesheet">
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+    <script>
+		var map;
+		var rides;
+		var hikes;
+		var marker;
+		var count = 0;
+		var opacity = 1.0;
+		var imageBounds = new google.maps.LatLngBounds(
+			  new google.maps.LatLng(29.50856990328634, 31.98952573813994),
+			  new google.maps.LatLng(34.51937864774265, 37.66048568588892));
+		var watchid = null;
+		function initialize() {
+        var myLatlng = new google.maps.LatLng(32,34);
+        var mapOptions = {
+//          zoom: 8,
+//          center: myLatlng,
+//          mapTypeId: google.maps.MapTypeId.ROADMAP
+			mapTypeId: google.maps.MapTypeId.TERRAIN,
+			mapTypeControlOptions: {
+				position: google.maps.ControlPosition.TOP_RIGHT
+			}
+        }
+
+        map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+
+        rides = new google.maps.KmlLayer('http://da-li.co.il/static/ge/berlin-all.kmz');
+        rides.setMap(map);
+        hikes = new google.maps.KmlLayer('http://da-li.co.il/static/ge/berlin.kmz');
+		marker = new google.maps.Marker({});
+//		weather = new google.maps.GroundOverlay('http://www.ims.gov.il/Ims/Pages/RadarImage.aspx?Row=9&TotalImages=10&LangID=1&Location=&noca=' + count,      imageBounds);
+		weather = new google.maps.GroundOverlay('http://meteo-logic.gmapsradar.s3.amazonaws.com/overlays/out0.png?rnd=' + count,      imageBounds);
+
+		weather.setOpacity(opacity);
+
+      }
+	  function ToggleOverlay(ol,state)
+	  {
+		if (state)
+		{
+			ol.setMap(map);
+		}
+		else
+		{
+			ol.setMap(null);
+		}
+	  }
+	  function trackLocation(state)
+	  {
+		if (state)
+		{
+			if (watchid == null)
+			{
+				var options = {  enableHighAccuracy: true };
+				watchid = navigator.geolocation.watchPosition(SetPositon,error,options);
+			}
+			marker.setMap(map);
+		}
+		else
+		{
+			marker.setMap(null);			
+		}
+	  }
+	  function error(err)
+	{
+	}
+	function SetPositon(pos)
+	{
+		lat = pos.coords.latitude;
+		lon = pos.coords.longitude;
+		marker.setPosition( new google.maps.LatLng( lat, lon ) );
+	}
+	  </script>
+  </head>
+  <body onload="initialize()">
+    <div id="map-canvas" style='border-radius: 25px;'></div>
+	<div style='font-size:20px;font-family:Arial;position:absolute;top:5px;left:10px;background-color:rgba(255,255,255,0.5);border-radius:5px;'>
+	<input type='checkbox' checked onchange='ToggleOverlay(rides,this.checked)'> Rides<br>
+	<input type='checkbox' onchange='ToggleOverlay(hikes,this.checked)'> Detour<br>
+	<input type='checkbox' onchange='trackLocation(this.checked)'> My Location<br>
+	<input type='checkbox' onchange='ToggleOverlay(weather,this.checked)'> Weather<br>
+	<a href='newall.kmz'>Download KMZ</a>
+	</div>
+  </body>
+</html>
+

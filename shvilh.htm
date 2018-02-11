@@ -1,0 +1,36 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Google Maps JavaScript API v3 Example: KmlLayer GeoRSS</title>
+    <link href="https://google-developers.appspot.com/maps/documentation/javascript/examples/default.css" rel="stylesheet">
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+    <script>
+      function initialize() {
+        var myLatlng = new google.maps.LatLng(32,34);
+        var mapOptions = {
+//          zoom: 8,
+//          center: myLatlng,
+//          mapTypeId: google.maps.MapTypeId.ROADMAP
+			mapTypeId: google.maps.MapTypeId.TERRAIN
+        }
+
+		var antic = 1;
+		
+        var map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+
+        var shvil = new google.maps.KmlLayer('http://da-li.co.il/static/ge/ShvilAll.kmz?ac=' + antic );
+        shvil.setMap(map);
+		
+		
+//        var georssLayer = new google.maps.KmlLayer('http://da-li.co.il/static/ge/newall.kmz');
+//        georssLayer.setMap(map);
+      }
+    </script>
+  </head>
+  <body onload="initialize()">
+    <div id="map-canvas"></div>
+  </body>
+</html>

@@ -1,0 +1,773 @@
+<html>
+<head>
+<meta charset="UTF-8">
+</head>
+<style type="text/css">
+<!--
+body
+{
+	font-size:50px;
+	font-family:Arial;
+	color:blue;
+}
+.mobileinput
+{
+font-size:75px;
+margin-bottom: 20px;
+margin-top: 10px;width:100%;
+padding: 15px;
+border-radius:5px;
+border:1px solid #7ac9b7
+}
+.mobile {
+ -webkit-appearance: none; -moz-appearance: none;
+ display: block;
+ margin: 1.5em 0;
+ font-size: 1em; line-height: 2.5em;
+ color: #333;
+ font-weight: bold;
+ height: 2.5em; width: 100%;
+ background: #fdfdfd; background: -moz-linear-gradient(top, #fdfdfd 0%, #bebebe 100%); background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#fdfdfd), color-stop(100%,#bebebe)); background: -webkit-linear-gradient(top, #fdfdfd 0%,#bebebe 100%); background: -o-linear-gradient(top, #fdfdfd 0%,#bebebe 100%); background: -ms-linear-gradient(top, #fdfdfd 0%,#bebebe 100%); background: linear-gradient(to bottom, #fdfdfd 0%,#bebebe 100%);
+ border: 1px solid #bbb;
+ -webkit-border-radius: 10px; -moz-border-radius: 10px; border-radius: 10px;
+}
+-->
+                #input {
+                    padding: 0 !important; 
+                    position : absolute !important; 
+                    top : 0px !important; 
+                    right : 0 !important; 
+                    left : 0 !important;     
+					height: 80px;
+					background-color: #e9e9e9
+                }
+				#map-canvas {
+                   padding: 0 !important; 
+                    position : absolute !important; 
+                    top : 80px !important; 
+					bottom: 120px !important;
+                    right : 0 !important; 
+                    left : 0 !important;     
+				}
+				#status {
+                   padding: 0 !important; 
+                    position : absolute !important; 
+					bottom: 0px !important;
+                    right : 0 !important; 
+                    left : 0 !important;     
+					height: 120px !important;
+					background-color: #e9e9e9
+				}
+ 
+</style>
+
+<body style='font-size:28px;font-family:Arial;font-weight:bold' onload='initialize()'>
+<script src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
+<div id="input" style='z-index:100;'>
+<center>
+<input type=button value='Setup' onclick="setup.style.visibility = 'visible';" style='font-size:60px;' >
+<input type=button id='tme' value='Me' onclick="SetTrack('me')" style='font-size:60px;'>
+<input type=button id='tyou' value='You' onclick="SetTrack('you')" style='font-size:60px;'>
+<input type=button id='tboth' value='Both' onclick="SetTrack('both')" style='font-size:60px;'>
+<input type=button id='tnone' value='None' onclick="SetTrack('none')" style='font-size:60px;'>
+<input type=button id='pause' value='Pause' onclick="PauseResume()" style='font-size:60px;'>
+
+</center>
+</div>
+<div id='setup' style='position:absolute;top:0px;left:0px;visibility:hidden;width:100%;z-index:1000;background-color:white;'>
+Me<br>
+<input class='mobileinput' id='me' size=6 onkeyup='SetMe(this.value);'>
+You<br>
+<input class='mobileinput' id='you' size=6>
+Recent<br>
+<select class='mobileinput' id='youlist' onchange='document.getElementById("you").value=this.value;SetYou(this.value);setup.style.visibility = "hidden";window.scrollTo(0,0);'>
+</select>
+My Avatar<br>
+<div id='meavatar' style='width:100%;height:64px;background-image:url("avatar/a1.png");background-repeat: no-repeat;;background-position:top center;'>
+</div>
+<div style='height:196px;overflow:auto;'>
+<script>
+var avataridx = new Array();
+
+document.write("<table style='width:100%;border-collapse: collapse;border: 1px solid lightgray;'>");
+for (i=1;i<35;i++)
+{
+	document.write("<tr style='height:100px;border: 1px solid lightgray;' onclick='doSelectNew(" + i + ");'><td style='text-align:center;'><img src='avatar/a" + i + ".png'></td></tr>");
+	avataridx["avatar/a" + i + ".png"] = i;
+}
+document.write("</table>");
+</script>
+</div>
+Zoom<br>
+<select class='mobileinput' onchange='map.setZoom(1*this.value)'>
+<option value=24>Max</option>
+<option value=20 selected>High</option>
+<option value=16>Mid</option>
+<option value=13>Low</option>
+</select>
+Refresh<br>
+<select class='mobileinput' onchange='setResfresh(1*this.value)'>
+<option value=300>5 minutes</option>
+<option value=60>1 minute</option>
+<option value=60>30 seconds</option>
+<option value=60 selected>5 seconds</option>
+<option value=1>1 seconds</option>
+</select>
+
+Map<br>
+<select class='mobileinput' onchange='setMapType(this.value)'>
+<option value='roadmap' selected>Road</option>
+<option value='satallite'>Satellite</option>
+<option value='terrain'>Terrain</option>
+<option value='hybrid'>Hybrid</option>
+</select>
+Group<br>
+<input class='mobileinput' id='group' size=6 onkeyup='SetGroup(this.value);'>
+Traffic<br>
+<input type=button class='mobile' value='Show' onclick='ToggleTraffic()' id='traffic'>
+<input type=button class='mobile' value='OK' onclick="UpdateYou();setup.style.visibility = 'hidden';window.scrollTo(0,0);">
+</div>
+<div id="status" style='z-index:100;'>
+</div>
+<div id="map-canvas" style='z-index:90;'></div>
+<script type="text/javascript">
+var map;
+var marker;
+var lat = 0;
+var lon = 0;
+var posDesc = "";
+var latyou = 0;
+var lonyou = 0;
+var myLatLng;
+var statusdiv;
+var me='Ron';
+var you='Orit';
+var Timeout=5000;
+var TimeoutLocal=Timeout;
+var ScreenTimeout=1000;
+var nrequest=0;
+var youString = "";
+var meString = "<br>";
+var TrackMode;
+var First = 1;
+var pause = 0;
+var polltimer;
+var group;
+var options = {  enableHighAccuracy: true };
+var watchid;
+var peerAvailable = 0;
+var meAvailable = 0;
+var  setup = document.getElementById("setup");
+var trafficLayer;
+var tme = document.getElementById("tme");
+var tyou = document.getElementById("tyou");
+var tnone = document.getElementById("tnone");
+var tboth = document.getElementById("tboth");
+var detailed = 0;
+var meavatar = "avarar/a1.png";
+var youavatar = "avatar/a22.png";
+
+function initialize() {
+	me = getCookie('me');
+	var meelm = document.getElementById("me");
+	meelm.value = me;
+	you = getCookie('you');
+	var youelm = document.getElementById("you");
+	youelm.value = you;
+	TrackMode = 'me';
+	group = getCookie('group');
+	var groupelm = document.getElementById("group");
+	groupelm.value = group;
+	var mapdiv = document.getElementById( 'map-canvas' );
+	var statdiv = document.getElementById( 'status' );
+	var inputdiv = document.getElementById( 'input' );
+	statdiv.style.left = (window.innerWidth - 900)/2;
+	input.style.left = (window.innerWidth - 900)/2;
+	mapdiv.style.height = window.innerHeight - 20;
+	mapdiv.style.width = window.innerWidth - 20;
+//	GetPosition();	
+	SetYouList();
+	initMeAvatar();
+	watchid = navigator.geolocation.watchPosition(SetPositon,error,options);
+    myLatLng = new google.maps.LatLng( lat, lon ),
+        myOptions = {
+            zoom: 17,
+            center: myLatLng,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+            },
+	map = new google.maps.Map( document.getElementById( 'map-canvas' ), myOptions ),
+	marker = new google.maps.Marker( {position: myLatLng, map: map, title: me, icon: meavatar} );
+	markeryou = new google.maps.Marker( {icon: youavatar, position: myLatLng, map: map} );
+	
+
+    var georssLayer = new google.maps.KmlLayer('http://da-li.co.il/static/ge/it30.kmz');
+    georssLayer.setMap(map);
+
+	
+	statusdiv = document.getElementById( 'status' );
+    marker.setMap( map );
+ 	markeryou.setMap( map );
+	trafficLayer = new google.maps.TrafficLayer();
+	moveBus();
+	Poll();
+	SetTrack('me');
+}
+
+function UpdateYou()
+{
+	var tempyou = document.getElementById( 'you' ).value;
+	var youlist = getCookie('youlist').split("#");
+	var i;
+	var found = 0;
+	if (you == tempyou)
+	{
+		return;
+	}
+	for (i=0;i<youlist.length;i++)
+	{
+		if (youlist[i] == tempyou)
+		{
+			found = 1;
+		}
+	}
+	if (found == 0)
+	{
+		var newlist = new Array();
+		newlist[0] = tempyou;
+		for (i=0;(i<youlist.length) && (i<10);i++)
+		{
+			newlist[i+1] = youlist[i];
+		}
+		setCookie('youlist',newlist.join("#"),365);
+		SetYouList();
+	}
+	SetYou(tempyou);
+}
+
+function setResfresh(timeout)
+{
+	var faster = timeout < timeout;
+	Timeout=1000*timeout;
+	TimeoutLocal=Timeout;
+	if (timeout>=60)
+	{
+		ScreenTimeout=5000;
+	}
+	else
+	{
+		ScreenTimeout=1000;
+	}
+	if (pause)
+	{
+		PauseResume();
+	}
+//	GetPosition();
+	if (faster)
+	{
+		clearTimeout(polltimer);
+		Poll();
+	}
+}
+
+function PauseResume()
+{
+	pause = 1 - pause;
+	if (pause)
+	{
+		document.getElementById("pause").value="Resume";
+		watchid = navigator.geolocation.watchPosition(SetPositon,error,options);
+
+	}
+	else
+	{
+		document.getElementById("pause").value="Pause";
+		navigator.geolocation.clearWatch(watchid);
+	}
+}
+
+function myTime()
+{
+	d = new Date();
+	var n = d.toTimeString();
+	return n.substr(0,8);
+}
+
+function SetTrack(val)
+{
+	TrackMode = val;
+	tme.style.background = 'white';
+	tyou.style.background = 'white';
+	tnone.style.background = 'white';
+	tboth.style.background = 'white';
+	if (TrackMode == 'me')
+	{
+		tme.style.background = '#3498db';
+	}
+	if (TrackMode == 'you')
+	{
+		tyou.style.background = '#3498db';
+	}
+	if (TrackMode == 'none')
+	{
+		tnone.style.background = '#3498db';
+	}
+	if (TrackMode == 'both')
+	{
+		tboth.style.background = '#3498db';
+	}
+	
+
+}
+function SetMe(name)
+{
+	me = name;
+	setCookie("me",name,365);
+	marker.setTitle(me);
+}
+function SetYou(name)
+{
+	you = name;
+	setCookie("you",name,365);
+}
+function SetGroup(name)
+{
+	you = name;
+	setCookie("group",name,365);
+}
+
+function setCookie(cname, cvalue, exdays) {
+    var d = new Date();
+    d.setTime(d.getTime() + (exdays*24*60*60*1000));
+    var expires = "expires="+d.toUTCString();
+    document.cookie = cname + "=" + cvalue + "; " + expires;
+}
+
+function getCookie(cname) {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0; i<ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1);
+        if (c.indexOf(name) != -1) return c.substring(name.length,c.length);
+    }
+    return "";
+}
+
+function GetPosition()
+{
+	if (pause)
+	{
+	}
+	else
+	{
+		navigator.geolocation.getCurrentPosition(SetPositon,error,options);
+		// watchPosition
+	}
+	setTimeout(GetPosition,TimeoutLocal);	
+}
+
+function setMapType(newType)
+{
+	map.setMapTypeId(newType); 
+}
+
+function error(err)
+{
+	var st;
+    switch(err.code) {
+        case err.PERMISSION_DENIED:
+            st = "User denied the request for Geolocation."
+            break;
+        case err.POSITION_UNAVAILABLE:
+            st = "Location information is unavailable."
+            break;
+        case err.TIMEOUT:
+            st = "The request to get user location timed out."
+            break;
+        case err.UNKNOWN_ERROR:
+            st = "An unknown error occurred."
+            break;
+    }
+	statusdiv.innerHTML = st ;	
+}
+
+
+
+function SetPositon(pos)
+{
+	lat = pos.coords.latitude;
+	lon = pos.coords.longitude;
+	meAvailable = 1;
+	posDesc = "Acur: " + pos.coords.accuracy  + "m \nUpdate " +  new Date;
+	if (pos.coords.speed > 0)
+	{
+		posDesc += " Speed: " + pos.coords.speed + "Km/h " + pos.coords.heading;
+	}
+	rlat = Math.round(100*lat)/100;
+	rlon = Math.round(100*lon)/100;
+	if (detailed)
+	{
+		meString = myTime() + ': [' + me + ':' + rlat + ',' + rlon + ']<br>';
+	}
+	else
+	{
+		meString = myTime() + ': [' + me + ']<br>';
+	}
+
+	UpdateStatus();
+}
+
+
+function UpdateStatus()
+{
+	if (peerAvailable && meAvailable)
+	{
+		relative = "<br>Distance: " + distance(lat,lon,latyou,lonyou) + " Bearing: " + bearing(lat,lon,latyou,lonyou);
+	}
+	else
+	{
+		relative = "<br>";
+	}
+	statusdiv.innerHTML =   meString + youString + relative;	
+
+}
+
+function SetYouList()
+{
+	var youlist = getCookie('youlist').split("#");
+	d=document.getElementById('youlist');
+
+	d.options.length=youlist.length-1;
+	for (i=0;i<youlist.length-1;i++)
+	{
+		d.options[i].text = youlist[i];
+		d.options[i].value = youlist[i];
+	}
+	if (youlist.length > 0)
+	{
+//		d.style.visibility = 'visible'; 
+	}
+	else
+	{
+//		d.style.visibility = 'hidden'; 		
+	}
+}
+
+function moveBus()
+{
+	if (pause)
+	{
+	}
+	else
+	{
+		var _me = new google.maps.LatLng( lat, lon );
+		var _you = new google.maps.LatLng( latyou, lonyou );
+		marker.setPosition( _me );
+		markeryou.setPosition( _you );
+		marker.setTitle(me + '\n' + posDesc);
+		if ((TrackMode == 'me') || (First == 1))
+		{
+			map.panTo( _me );
+		}
+		if (TrackMode == 'you')
+		{
+			map.panTo( _you );
+		}
+		First = 0;
+		if (TrackMode == 'both')
+		{
+			if (lat > latyou)
+			{
+				var north = lat;
+				var south = latyou;
+			}
+			else
+			{
+				var north = latyou;
+				var south = lat;				
+			}
+			if (lon > lonyou)
+			{
+				var west = lonyou;
+				var east = lon;
+			}
+			else
+			{
+				var west = lon;
+				var east = lonyou;				
+			}
+			var sw = new google.maps.LatLng( south, west );
+			var ne = new google.maps.LatLng( north, east );
+			var latlngbounds = new google.maps.LatLngBounds(sw,ne);
+			map.setCenter(latlngbounds.getCenter());
+			map.fitBounds(latlngbounds); 
+		}
+	}
+	setTimeout(moveBus,ScreenTimeout);	
+};
+
+// initialize();
+
+function Poll()
+{
+	if (pause)
+	{
+		setTimeout("Poll()",Timeout);
+	}
+	else
+	{
+		var xmlhttp;
+		if (window.XMLHttpRequest)
+		{// code for IE7+, Firefox, Chrome, Opera, Safari
+			xmlhttp=new XMLHttpRequest();
+		}
+		else
+		{// code for IE6, IE5
+			xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+		}
+		xmlhttp.onreadystatechange=function()
+		{
+			if (xmlhttp.readyState==4)
+			{
+				if (xmlhttp.status==200)
+				{
+					Update(xmlhttp.responseText);
+				}
+				polltimer = setTimeout("Poll()",Timeout);
+			}
+		}
+		//  http://www.da-li.co.il/kapon/map/?name=ron&lat=10&lon=40
+		xmlhttp.open("GET","http://www.da-li.co.il/kapon/map/?name=" +  me + "&lat=" + lat +  "&lon=" + lon + "&you=" + you + "&group" + group +  "&count=" + (++nrequest) + "&avatar=" + avataridx[meavatar] ,true);
+		xmlhttp.send();
+	}
+}
+
+function HideShow()
+{
+	if (document.getElementById('map-canvas').style.display == 'none')
+	{
+		document.getElementById('map-canvas').style.display = 'block';
+	}
+	else
+	{
+		document.getElementById('map-canvas').style.display = 'none';
+	}
+}
+
+
+function FormatDiff(d)
+{
+	if (d >  24  * 3600)
+	{
+		return ", " + Math.floor(d/(3600*24)) + " days ago";
+	}
+	if (d > 3600)
+	{
+		return ", " + Math.floor(d/3600) + " hour ago";
+	}
+	if (d > 60)
+	{
+		return ", " + Math.floor(d/60) + " minute ago";		
+	}
+	if (d > 10)
+	{
+		return ", " + Math.floor(d) + " seconds ago";
+	}
+	return "";
+}
+
+function Update(text)
+{
+	text = text.replace(/\r/gm,"");
+	Lines = text.split(/\n/);
+	peerAvailable = 0;
+	var newyouavatar;
+	if (Lines[0].search(/did not send updates/) > -1)
+	{
+		youString = myTime() + ': [' +  you + ': Not found ]';
+	}
+	else
+	{	
+		for (i=0;i<Lines.length;i++)
+		{
+			cells = Lines[i].split(/[,\t]/);
+			if (cells[0] == you)
+			{
+				latyou = cells[1];
+				lonyou = cells[2];
+//				timeyou = cells[3].substring(11,11+8);
+				timeyou = cells[3];
+				dateyou = cells[4];
+				if ((cells[5] == "") || (cells[5] == "None") || (cells[5] == "none"))
+				{
+				}
+				else
+				{
+					newyouavatar = "avatar/a" + cells[5] + ".png";
+					if (!(newyouavatar == youavatar))
+					{
+						markeryou.setIcon(newyouavatar);
+						youavatar = newyouavatar;
+					}
+				}
+				dy = new Date(dateyou.replace(/\-/g,"/") + " " + timeyou);
+				dm = new Date();
+				diff = FormatDiff((dm-dy)/1000);
+//				rlatyou = Math.round(100*latyou)/100;
+//				rlonyou = Math.round(100*lonyou)/100;
+				if (detailed)
+				{
+					rlatyou = deg2dms(latyou,'lat');
+					rlonyou = deg2dms(lonyou,'lon');
+					youString =   myTime() + ': [' +  you + ':' + rlatyou + ',' + rlonyou + ' @' + timeyou + diff + ']';
+				}
+				else
+				{
+					youString =   myTime() + ': [' +  you + ' @' + timeyou + diff + ']';
+				}
+				markeryou.setTitle(you + ' last seen ' + cells[3]);
+				peerAvailable = 1;				
+			}
+		}
+	}
+	UpdateStatus();
+}
+
+function distance(lat1,lon1,lat2,lon2)
+{
+	var decimals = 1;
+    var earthRadius = 6371; // km
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLon = (lon2 - lon1) * Math.PI / 180;
+    var lat1 = lat1 * Math.PI / 180;
+    var lat2 = lat2 * Math.PI / 180;
+ 
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    var d = earthRadius * c;
+	if (d < 1)
+	{
+		return Math.round(d * 1000) + "m" ; /// meters
+	}
+	else
+	{
+		return Math.round(d * Math.pow(10, decimals)) / Math.pow(10, decimals) + "Km"; // d.d km
+	}
+    
+};
+
+function bearing(lat1,lon1,lat2,lon2)
+{
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLon = (lon2 - lon1) * Math.PI / 180;
+    var lat1 = lat1 * Math.PI / 180;
+    var lat2 = lat2 * Math.PI / 180;
+	var y = Math.sin(dLon) * Math.cos(lat2);
+	var x = Math.cos(lat1)*Math.sin(lat2) -
+			Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
+	return Math.round((Math.atan2(y, x) * 180 / Math.PI + 360) % 360) + "&deg;";
+}
+
+function ToggleTraffic()
+{
+	var mode = document.getElementById("traffic").value
+	if (mode == "Show")
+	{
+		document.getElementById("traffic").value="Hide";
+		trafficLayer.setMap(map);
+	}
+	else
+	{
+		document.getElementById("traffic").value="Show";
+		trafficLayer.setMap(null);
+	}
+
+}
+
+function deg2dms(deg,latlon)
+{
+	if (deg == "N/A")
+	{
+		return deg;
+	}
+	if (latlon == 'lat')
+	{
+		if (deg >= 0)
+		{
+			s = "N";
+		}
+		else
+		{
+			s = "S";
+		}
+	}
+	else
+	{
+		if (deg >= 0)
+		{
+			s = "E";
+		}
+		else
+		{
+			s = "W";
+		}	
+	}
+    d = parseInt(deg);
+    md = Math.abs(deg - d) * 60;
+    m = parseInt(md);
+	if (m < 10)
+	{
+		p1 = "0";
+	}
+	else
+	{
+		p1 = "";
+	}
+    sd = (md - m) * 60;
+	if (sd < 10)
+	{
+		p2 = "0";
+	}
+	else
+	{
+		p2 = "";
+	}
+	return Math.abs(d) + "&deg;" +  p1 +  m + "'" + p2 + sd.toFixed(2) + '"' + s;
+}	
+
+function initMeAvatar()
+{
+	var obj = document.getElementById('meavatar');;
+	var val = getCookie('meavatar');
+	if (val == "")
+	{
+		val = 1;
+	}
+	meavatar = "avatar/a" + val + ".png";
+	obj.style.backgroundImage="url(\'" + meavatar + "')";
+}
+
+function doSelectNew(i)
+{
+	var obj = document.getElementById('meavatar');;
+	var val = i;
+	meavatar = "avatar/a" + val + ".png";
+	obj.style.backgroundImage="url(\'" + meavatar + "')";
+//	obj.value = i;
+	setCookie('meavatar',i,365);
+	marker.setIcon(meavatar);
+}
+
+function doSelect(obj)
+{
+	meavatar = "avatar/a" + obj.value + ".png";
+	obj.style.backgroundImage="url(\'" + meavatar + "')";
+	setCookie('meavatar',obj.value,365);
+	marker.setIcon(meavatar);
+}
+
+
+
+</script>
+</body>
